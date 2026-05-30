@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WM 2026 Tippspiel</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
 <style>
 :root {
   --gold:#D4AF37; --gold-l:#F0D060;
@@ -332,6 +333,36 @@ table.at td:first-child{text-align:left;color:var(--tdim);}
 .no-player-msg{text-align:center;padding:60px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--tdim);letter-spacing:2px;}
 .no-player-msg span{color:var(--bright);}
 
+/* ── THEME SELECTOR ── */
+.theme-select-wrap{display:flex;align-items:center;gap:8px;}
+.theme-select-wrap label{font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;font-size:.78rem;color:var(--tdim);text-transform:uppercase;}
+select#themeSelect{background:rgba(0,0,0,0.35);backdrop-filter:blur(10px);color:var(--gold);border:1px solid rgba(212,175,55,0.4);padding:9px 14px;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:600;letter-spacing:1px;border-radius:var(--rs);cursor:pointer;outline:none;transition:all .2s;}
+select#themeSelect:hover{border-color:var(--gold);}
+select#themeSelect option{background:#145220;color:var(--text);}
+
+/* ── THEME: HELL ── */
+body.theme-light{background:#dce8dc;--text:#0d2010;--tdim:rgba(0,0,0,0.45);--tmid:rgba(0,0,0,0.7);--glass:rgba(0,0,0,0.06);--glass-b:rgba(0,0,0,0.1);}
+body.theme-light header{background:rgba(220,235,220,0.95);border-bottom-color:rgba(20,100,40,0.2);}
+body.theme-light .game-card{background:rgba(255,255,255,0.75);border-color:rgba(0,0,0,0.1);}
+body.theme-light .game-card:hover{background:rgba(255,255,255,0.92);}
+body.theme-light .tip-panel{background:rgba(230,240,230,0.9);}
+body.theme-light .bracket-match{background:rgba(255,255,255,0.75);}
+body.theme-light .bracket-match:hover{background:rgba(255,255,255,0.92);}
+body.theme-light table.sb td{background:rgba(255,255,255,0.6);}
+body.theme-light .day-header{color:rgba(0,0,0,0.4);border-left-color:rgba(0,0,0,0.15);}
+body.theme-light select#playerSelect,body.theme-light select#themeSelect{background:rgba(255,255,255,0.5);color:#0d5020;}
+body.theme-light .btn-glass{background:rgba(0,0,0,0.08);border-color:rgba(0,0,0,0.15);color:#0d2010;}
+body.theme-light .tabs-wrap{border-bottom-color:rgba(0,0,0,0.12);}
+body.theme-light .tab-btn{color:rgba(0,0,0,0.4);}
+body.theme-light .tab-btn:hover{color:#0d2010;}
+body.theme-light .filter-btn{background:rgba(0,0,0,0.07);border-color:rgba(0,0,0,0.1);color:rgba(0,0,0,0.5);}
+body.theme-light .past-toggle{background:rgba(0,0,0,0.07);border-color:rgba(0,0,0,0.1);}
+body.theme-light .api-bar,.body.theme-light .tabs-wrap{background:transparent;}
+
+/* ── THEME: STADION ── */
+body.theme-stadium{background:#0a0a0a;background-image:url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1920&q=80');background-size:cover;background-position:center;background-attachment:fixed;}
+body.theme-stadium::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:rgba(0,0,0,0.72);}
+
 /* ── PLAYER MODAL ── */
 #playerModal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);}
 #playerModal.hidden{display:none;}
@@ -376,6 +407,14 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
         <h1>WM 2026 Tippspiel</h1>
         <p>USA &middot; Kanada &middot; Mexiko &middot; 11. Juni &ndash; 19. Juli</p>
       </div>
+    </div>
+    <div class="theme-select-wrap">
+      <label for="themeSelect">Design:</label>
+      <select id="themeSelect" onchange="setTheme(this.value)">
+        <option value="dark">🌿 Dunkel</option>
+        <option value="light">☀️ Hell</option>
+        <option value="stadium">🏟️ Stadion</option>
+      </select>
     </div>
     <div class="player-select-wrap">
       <label for="playerSelect">Spieler:</label>
@@ -866,6 +905,7 @@ setInterval(refresh,2*60*1000);
 
 function renderAll(){
   renderGames();renderPrepGames();renderBracket();renderRangliste();
+  setTimeout(parseTwemoji,50);
   // Request notification permission if not yet asked
   if("Notification" in window&&Notification.permission==="default"&&currentPlayer&&OS_APP_ID){
     document.getElementById("pushBanner").style.display="block";
@@ -1155,6 +1195,21 @@ function showToast(msg,bg){
   const t=document.getElementById("toast");
   t.innerHTML=msg;t.style.background=bg||"rgba(46,204,113,0.9)";
   t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+// ── THEME ──
+function setTheme(t){
+  document.body.classList.remove("theme-light","theme-stadium");
+  if(t==="light")document.body.classList.add("theme-light");
+  if(t==="stadium")document.body.classList.add("theme-stadium");
+  localStorage.setItem("wm26_theme",t);
+  document.getElementById("themeSelect").value=t;
+}
+(function(){const t=localStorage.getItem("wm26_theme")||"dark";setTheme(t);})();
+
+// ── TWEMOJI ──
+function parseTwemoji(){
+  if(window.twemoji)twemoji.parse(document.body,{folder:"svg",ext:".svg",base:"https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/"});
 }
 
 // ── PLAYER MODAL ──
