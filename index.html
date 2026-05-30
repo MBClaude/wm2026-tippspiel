@@ -493,7 +493,7 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
 
 <div class="push-banner" id="pushBanner" style="display:none">
   <div class="push-box">
-    <span>&#128276; <strong>Push-Benachrichtigungen</strong> &mdash; Werde 5 Min vor Anpfiff erinnert wenn du noch nicht getippt hast.</span>
+    <span>&#128276; <strong>Push-Benachrichtigungen</strong> &mdash; Wir erinnern dich t&auml;glich um 18:00 Uhr wenn du noch nicht getippt hast.</span>
     <button class="btn-gold" onclick="enablePush()" style="padding:6px 16px;font-size:.82rem">Aktivieren</button>
     <button class="btn-glass" onclick="document.getElementById('pushBanner').style.display='none'" style="padding:6px 14px;font-size:.78rem">Sp&auml;ter</button>
   </div>
@@ -772,7 +772,23 @@ function initOneSignal(){
   if(!OS_APP_ID)return;
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   OneSignalDeferred.push(async function(OneSignal){
-    await OneSignal.init({appId:OS_APP_ID,serviceWorkerParam:{scope:"/"}});
+    await OneSignal.init({
+      appId:OS_APP_ID,
+      serviceWorkerParam:{scope:"/"},
+      promptOptions:{
+        slidedown:{
+          prompts:[{
+            type:"push",
+            autoPrompt:true,
+            text:{
+              actionMessage:"Erhalte eine Erinnerung um 18:00 Uhr wenn du noch nicht getippt hast!",
+              acceptButton:"Ja, erinnere mich!",
+              cancelButton:"Nein danke"
+            }
+          }]
+        }
+      }
+    });
     const isSubscribed=await OneSignal.User.PushSubscription.optedIn;
     if(!isSubscribed) document.getElementById("pushBanner").style.display="block";
   });
