@@ -1288,7 +1288,7 @@ function renderBracket(){
       const card=document.createElement("div");
       card.className="bracket-match"+(isF?" finished":"");
       card.innerHTML="<div class='bm-label'><span>"+slot.label+" &middot; "+fmtDate(slot.date)+"</span>"
-        +"<a class='stream-link' href='"+su+"' target='_blank'>&#128250; Stream</a></div>"
+        +"</div>"
         +"<div class='bm-teams'><div class='bm-team home'>"+kg.home+" "+flagImg(kg.home,20)+"</div>"+scoreH+"<div class='bm-team away'>"+flagImg(kg.away,20)+" "+kg.away+"</div></div>"
         +tipH;
       grid.appendChild(card);
@@ -1423,13 +1423,23 @@ function confirmPlayer(){
 }
 
 document.getElementById("playerSelect").addEventListener("change",function(){
-  currentPlayer=this.value;
-  if(currentPlayer&&OS_APP_ID){
-    if(window.OneSignalDeferred){
+  const newPlayer=this.value;
+  const locked=localStorage.getItem("wm26_player_lock");
+  // Warnung wenn bereits ein anderer Spieler gesetzt war
+  if(locked&&locked!==newPlayer&&newPlayer){
+    const ok=confirm("⚠️ Du wechselst von \""+locked+"\" zu \""+newPlayer+"\".\n\nBitte nur deinen eigenen Namen wählen!\n\nWirklich wechseln?");
+    if(!ok){this.value=locked;return;}
+  }
+  currentPlayer=newPlayer;
+  if(currentPlayer){
+    localStorage.setItem("wm26_player_lock",currentPlayer);
+    if(OS_APP_ID&&window.OneSignalDeferred){
       OneSignalDeferred.push(async function(OS){
         await OS.User.addTag("player",currentPlayer);
       });
     }
+  }else{
+    localStorage.removeItem("wm26_player_lock");
   }
   renderAll();
 });
@@ -1442,6 +1452,16 @@ document.querySelectorAll(".filter-btn").forEach(btn=>{
 
 // ── INIT ──
 loadConfig();
+// Gespeicherten Spieler wiederherstellen
+(function(){
+  const saved=localStorage.getItem("wm26_player_lock");
+  if(saved){
+    currentPlayer=saved;
+    document.getElementById("playerSelect").value=saved;
+    document.getElementById("pmSelect").value=saved;
+    document.getElementById("playerModal").classList.add("hidden");
+  }
+})();
 buildKOBracket();
 switchTab("vorbereitung");
 renderAll();
