@@ -364,6 +364,20 @@ table.at td:first-child{text-align:left;color:var(--tdim);}
 .no-player-msg{text-align:center;padding:60px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--tdim);letter-spacing:2px;}
 .no-player-msg span{color:var(--bright);}
 
+/* ── PLAYER MODAL ── */
+#playerModal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);}
+#playerModal.hidden{display:none;}
+.pm-box{background:linear-gradient(135deg,rgba(15,74,26,0.97),rgba(11,53,18,0.97));border:2px solid var(--gold);border-radius:20px;padding:40px 48px;text-align:center;box-shadow:0 0 80px rgba(212,175,55,0.3),0 20px 60px rgba(0,0,0,0.6);max-width:480px;width:90%;}
+.pm-trophy{font-size:3.5rem;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(212,175,55,0.8));}
+.pm-title{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:5px;background:linear-gradient(135deg,#D4AF37,#F0D060);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;}
+.pm-sub{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;letter-spacing:3px;color:var(--tdim);text-transform:uppercase;margin-bottom:28px;}
+.pm-label{font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:2px;color:var(--tdim);text-transform:uppercase;margin-bottom:10px;}
+select#pmSelect{width:100%;background:rgba(0,0,0,0.5);color:var(--gold);border:2px solid rgba(212,175,55,0.5);padding:14px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:2px;border-radius:10px;cursor:pointer;outline:none;margin-bottom:20px;transition:all .2s;}
+select#pmSelect:focus{border-color:var(--gold);}
+select#pmSelect option{background:#0B3512;color:var(--text);}
+.pm-btn{width:100%;padding:14px;font-size:1rem;letter-spacing:3px;border-radius:10px;}
+.pm-btn:disabled{opacity:.35;cursor:not-allowed;}
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
   .game-header{grid-template-columns:90px 1fr auto 1fr 100px;padding:12px 14px;gap:8px;}
@@ -494,6 +508,25 @@ table.at td:first-child{text-align:left;color:var(--tdim);}
 </div>
 
 </main>
+<!-- ── PLAYER MODAL ── -->
+<div id="playerModal">
+  <div class="pm-box">
+    <div class="pm-trophy">&#127942;</div>
+    <div class="pm-title">WM 2026 Tippspiel</div>
+    <div class="pm-sub">USA &middot; Kanada &middot; Mexiko &middot; 11. Juni &ndash; 19. Juli</div>
+    <div class="pm-label">Wer bist du?</div>
+    <select id="pmSelect">
+      <option value="">&#8212; Namen w&auml;hlen &#8212;</option>
+      <option>Alexander</option><option>Axel</option><option>Bastian</option>
+      <option>Christian</option><option>Klaus</option><option>Lars</option>
+      <option>Maik</option><option>Matthias</option><option>Michael</option>
+      <option>Roland</option><option>Sabine</option><option>Steffen</option>
+      <option>Thomas</option><option>Usman</option>
+    </select>
+    <button class="btn-gold pm-btn" id="pmBtn" onclick="confirmPlayer()" disabled>Los geht&apos;s &#9917;</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
@@ -1115,6 +1148,22 @@ function showToast(msg,bg){
   const t=document.getElementById("toast");
   t.innerHTML=msg;t.style.background=bg||"rgba(46,204,113,0.9)";
   t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+// ── PLAYER MODAL ──
+document.getElementById("pmSelect").addEventListener("change",function(){
+  document.getElementById("pmBtn").disabled=!this.value;
+});
+function confirmPlayer(){
+  const v=document.getElementById("pmSelect").value;
+  if(!v)return;
+  currentPlayer=v;
+  document.getElementById("playerSelect").value=v;
+  document.getElementById("playerModal").classList.add("hidden");
+  if(OS_APP_ID&&window.OneSignalDeferred){
+    OneSignalDeferred.push(async function(OS){await OS.User.addTag("player",currentPlayer);});
+  }
+  renderAll();
 }
 
 document.getElementById("playerSelect").addEventListener("change",function(){
