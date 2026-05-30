@@ -25,50 +25,11 @@ body {
   overflow-x:hidden;
   color:var(--text);
   font-family:'Barlow',sans-serif;
-  /* LUSH GREEN PITCH */
-  background:
-    /* white pitch lines */
-    repeating-linear-gradient(
-      180deg,
-      rgba(255,255,255,0.04) 0px,
-      rgba(255,255,255,0.04) 1px,
-      transparent 1px,
-      transparent 80px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,0.015) 0px,
-      rgba(255,255,255,0.015) 1px,
-      transparent 1px,
-      transparent 120px
-    ),
-    /* alternating dark/light green stripes */
-    repeating-linear-gradient(
-      180deg,
-      #1A6B2A 0px, #1A6B2A 80px,
-      #145220 80px, #145220 160px
-    );
+  background:#0e1f14;
 }
 
-/* centre-circle glow */
-body::before {
-  content:'';
-  position:fixed; inset:0; z-index:0; pointer-events:none;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 50%,
-      rgba(46,204,113,0.18) 0%, transparent 65%),
-    radial-gradient(ellipse at 50% 0%,
-      rgba(76,217,100,0.12) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 100%,
-      rgba(0,0,0,0.4) 0%, transparent 60%);
-}
-body::after{
-  content:'';
-  position:fixed; inset:0; z-index:0; pointer-events:none;
-  /* subtle vignette */
-  background:radial-gradient(ellipse at 50% 50%,
-    transparent 40%, rgba(0,0,0,0.35) 100%);
-}
+body::before{content:none;}
+body::after{content:none;}
 
 header,.tabs-wrap,.api-bar,.push-banner,main,.toast{position:relative;z-index:1;}
 
