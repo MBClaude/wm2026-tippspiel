@@ -1,0 +1,165 @@
+name: Daily 18:00 Tipp-Erinnerung
+
+on:
+  schedule:
+    - cron: '0 16 * * *'   # 16:00 UTC = 18:00 MESZ (Sommer) / 17:00 MEZ (Winter)
+  workflow_dispatch:         # Manuell auslösbar zum Testen
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sende Push-Benachrichtigungen für nicht getippte Spiele
+        env:
+          SUPABASE_URL: https://zewalniirmsuclbcdrlv.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+        run: |
+          cat << 'EOF' > reminder.js
+          const SUPABASE_URL = process.env.SUPABASE_URL;
+          const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+          const OS_APP_ID    = process.env.ONESIGNAL_APP_ID;
+          const OS_API_KEY   = process.env.ONESIGNAL_API_KEY;
+
+          const PLAYERS = [
+            "Alexander","Axel","Bastian","Christian","Klaus","Lars",
+            "Maik","Matthias","Michael","Roland","Sabine","Steffen","Thomas","Usman"
+          ];
+
+          const GAMES = [
+            {id:201,date:"2026-05-31",time:"18:45",home:"Deutschland",away:"Finnland"},
+            {id:202,date:"2026-06-06",time:"18:30",home:"USA",away:"Deutschland"},
+            {id:1,date:"2026-06-11",time:"21:00",home:"Mexiko",away:"Ecuador"},
+            {id:2,date:"2026-06-12",time:"00:00",home:"USA",away:"Kanada"},
+            {id:3,date:"2026-06-12",time:"21:00",home:"Uruguay",away:"Kenia"},
+            {id:4,date:"2026-06-13",time:"00:00",home:"Deutschland",away:"Japan"},
+            {id:5,date:"2026-06-13",time:"03:00",home:"Spanien",away:"Bahrain"},
+            {id:6,date:"2026-06-13",time:"21:00",home:"Frankreich",away:"Kolumbien"},
+            {id:7,date:"2026-06-14",time:"00:00",home:"Brasilien",away:"Kamerun"},
+            {id:8,date:"2026-06-14",time:"03:00",home:"England",away:"Serbien"},
+            {id:9,date:"2026-06-14",time:"21:00",home:"Portugal",away:"Angola"},
+            {id:10,date:"2026-06-15",time:"00:00",home:"Argentinien",away:"Irak"},
+            {id:11,date:"2026-06-15",time:"03:00",home:"Panama",away:"Neuseeland"},
+            {id:12,date:"2026-06-15",time:"21:00",home:"Niederlande",away:"Senegal"},
+            {id:13,date:"2026-06-16",time:"00:00",home:"Mexiko",away:"Bolivien"},
+            {id:14,date:"2026-06-16",time:"03:00",home:"Belgien",away:"Neuseeland"},
+            {id:15,date:"2026-06-16",time:"21:00",home:"Marokko",away:"Haiti"},
+            {id:16,date:"2026-06-17",time:"00:00",home:"Australien",away:"Guinea"},
+            {id:17,date:"2026-06-17",time:"03:00",home:"Kroatien",away:"Chile"},
+            {id:18,date:"2026-06-17",time:"21:00",home:"Sued Korea",away:"Algerien"},
+            {id:19,date:"2026-06-18",time:"00:00",home:"Tuerkei",away:"Venezuela"},
+            {id:20,date:"2026-06-18",time:"03:00",home:"Saudi-Arabien",away:"Malaysia"},
+            {id:21,date:"2026-06-18",time:"21:00",home:"Polen",away:"Oesterreich"},
+            {id:22,date:"2026-06-19",time:"00:00",home:"Ver. Arab. Emirate",away:"Cuba"},
+            {id:23,date:"2026-06-19",time:"03:00",home:"Ungarn",away:"Paraguay"},
+            {id:24,date:"2026-06-19",time:"21:00",home:"Ecuador",away:"Nigeria"},
+            {id:25,date:"2026-06-20",time:"00:00",home:"Kamerun",away:"Mexiko"},
+            {id:26,date:"2026-06-20",time:"03:00",home:"Kanada",away:"Panama"},
+            {id:27,date:"2026-06-20",time:"21:00",home:"Bolivien",away:"Uruguay"},
+            {id:28,date:"2026-06-21",time:"00:00",home:"Japan",away:"Australien"},
+            {id:61,date:"2026-06-21",time:"00:00",home:"Deutschland",away:"Guinea"},
+            {id:29,date:"2026-06-21",time:"03:00",home:"Bahrain",away:"Kroatien"},
+            {id:30,date:"2026-06-21",time:"21:00",home:"Algerien",away:"Frankreich"},
+            {id:31,date:"2026-06-22",time:"00:00",home:"Serbien",away:"Tuerkei"},
+            {id:32,date:"2026-06-22",time:"03:00",home:"Angola",away:"Saudi-Arabien"},
+            {id:33,date:"2026-06-22",time:"21:00",home:"Irak",away:"Polen"},
+            {id:34,date:"2026-06-23",time:"00:00",home:"Senegal",away:"Ver. Arab. Emirate"},
+            {id:35,date:"2026-06-23",time:"03:00",home:"Paraguay",away:"Belgien"},
+            {id:36,date:"2026-06-23",time:"21:00",home:"Nigeria",away:"Marokko"},
+            {id:37,date:"2026-06-24",time:"00:00",home:"Brasilien",away:"Mexiko"},
+            {id:38,date:"2026-06-24",time:"00:00",home:"Ecuador",away:"Kamerun"},
+            {id:39,date:"2026-06-24",time:"21:00",home:"USA",away:"Panama"},
+            {id:40,date:"2026-06-24",time:"21:00",home:"Kanada",away:"Neuseeland"},
+            {id:41,date:"2026-06-25",time:"00:00",home:"Uruguay",away:"Mexiko"},
+            {id:42,date:"2026-06-25",time:"00:00",home:"Kenia",away:"Bolivien"},
+            {id:43,date:"2026-06-25",time:"21:00",home:"Deutschland",away:"Australien"},
+            {id:44,date:"2026-06-25",time:"21:00",home:"Guinea",away:"Japan"},
+            {id:45,date:"2026-06-26",time:"00:00",home:"Spanien",away:"Kroatien"},
+            {id:46,date:"2026-06-26",time:"00:00",home:"Chile",away:"Bahrain"},
+            {id:47,date:"2026-06-26",time:"21:00",home:"Frankreich",away:"Sued Korea"},
+            {id:48,date:"2026-06-26",time:"21:00",home:"Kolumbien",away:"Algerien"},
+            {id:49,date:"2026-06-27",time:"00:00",home:"England",away:"Tuerkei"},
+            {id:50,date:"2026-06-27",time:"00:00",home:"Venezuela",away:"Serbien"},
+            {id:51,date:"2026-06-27",time:"21:00",home:"Portugal",away:"Saudi-Arabien"},
+            {id:52,date:"2026-06-27",time:"21:00",home:"Malaysia",away:"Angola"},
+            {id:53,date:"2026-06-28",time:"00:00",home:"Argentinien",away:"Polen"},
+            {id:54,date:"2026-06-28",time:"00:00",home:"Oesterreich",away:"Irak"},
+            {id:55,date:"2026-06-28",time:"21:00",home:"Niederlande",away:"Ver. Arab. Emirate"},
+            {id:56,date:"2026-06-28",time:"21:00",home:"Cuba",away:"Senegal"},
+            {id:57,date:"2026-06-29",time:"00:00",home:"Belgien",away:"Ungarn"},
+            {id:58,date:"2026-06-29",time:"00:00",home:"Neuseeland",away:"Paraguay"},
+            {id:59,date:"2026-06-29",time:"21:00",home:"Marokko",away:"Ecuador"},
+            {id:60,date:"2026-06-29",time:"21:00",home:"Haiti",away:"Nigeria"},
+            {id:62,date:"2026-06-20",time:"18:00",home:"Brasilien",away:"Ecuador"},
+            {id:63,date:"2026-06-20",time:"18:00",home:"USA",away:"Neuseeland"},
+            {id:64,date:"2026-06-21",time:"18:00",home:"Mexiko",away:"Kenia"},
+            {id:65,date:"2026-06-22",time:"18:00",home:"Spanien",away:"Chile"},
+            {id:66,date:"2026-06-22",time:"18:00",home:"Kolumbien",away:"Sued Korea"},
+            {id:67,date:"2026-06-21",time:"18:00",home:"England",away:"Venezuela"},
+            {id:68,date:"2026-06-21",time:"18:00",home:"Portugal",away:"Malaysia"},
+            {id:69,date:"2026-06-22",time:"18:00",home:"Argentinien",away:"Oesterreich"},
+            {id:70,date:"2026-06-23",time:"18:00",home:"Niederlande",away:"Cuba"},
+            {id:71,date:"2026-06-23",time:"18:00",home:"Neuseeland",away:"Ungarn"},
+            {id:72,date:"2026-06-23",time:"18:00",home:"Haiti",away:"Ecuador"},
+          ];
+
+          async function main() {
+            const now = new Date();
+            const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+            // Spiele der nächsten 24h finden
+            const upcoming = GAMES.filter(g => {
+              const [h, m] = g.time.split(':').map(Number);
+              const ko = new Date(`${g.date}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00Z`);
+              return ko > now && ko < in24h;
+            });
+
+            if (upcoming.length === 0) {
+              console.log('Keine Spiele in den nächsten 24h — nichts zu tun.');
+              return;
+            }
+            console.log(`${upcoming.length} Spiele morgen:`, upcoming.map(g => g.home + ' vs ' + g.away).join(', '));
+
+            // Vorhandene Tipps von Supabase laden
+            const gameIds = upcoming.map(g => g.id).join(',');
+            const res = await fetch(
+              `${SUPABASE_URL}/rest/v1/tips?select=player,game_id&game_id=in.(${gameIds})`,
+              { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+            );
+            const tips = await res.json();
+            const tipped = new Set(tips.map(t => `${t.player}_${t.game_id}`));
+
+            // Pro Spieler prüfen & Push schicken
+            for (const player of PLAYERS) {
+              const missing = upcoming.filter(g => !tipped.has(`${player}_${g.id}`));
+              if (missing.length === 0) {
+                console.log(`✓ ${player} hat alle Spiele getippt`);
+                continue;
+              }
+              const names = missing.map(g => `${g.home} vs ${g.away}`).join(', ');
+              const body = `${missing.length} Spiel${missing.length > 1 ? 'e' : ''} noch ohne Tipp: ${names}`;
+              console.log(`📲 Sende an ${player}: ${body}`);
+
+              const push = await fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Basic ${OS_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  app_id: OS_APP_ID,
+                  filters: [{ field: 'tag', key: 'player', relation: '=', value: player }],
+                  headings: { de: `⏰ WM Tippspiel — ${player}` },
+                  contents: { de: body },
+                  url: 'https://mbclaude.github.io/wm2026-tippspiel/',
+                }),
+              });
+              const result = await push.json();
+              console.log(`   → ${result.id ? '✅ gesendet (' + result.recipients + ' Geräte)' : '❌ ' + JSON.stringify(result.errors)}`);
+            }
+          }
+
+          main().catch(console.error);
+          EOF
+          node reminder.js
