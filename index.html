@@ -238,6 +238,9 @@ table.sb tr:hover td{background:rgba(46,204,113,0.12);}
 .game-card.live-now{border-left:3px solid var(--red);animation:livecard 2s infinite;}
 @keyframes livecard{0%,100%{border-left-color:var(--red)}50%{border-left-color:#ff7070}}
 .game-card.prep-card{border-left:3px solid var(--gold);}
+.game-card.germany-game{border-left:3px solid #000;border-right:3px solid #E10019;background:rgba(20,60,30,0.75);}
+.game-card.germany-game .game-header{background:linear-gradient(90deg,rgba(0,0,0,0.25) 0%,transparent 40%,transparent 60%,rgba(224,0,25,0.15) 100%);}
+.game-card.germany-game:hover{border-left-color:#000;border-right-color:#E10019;}
 
 .game-header{
   display:grid;
@@ -983,7 +986,8 @@ function buildCard(g,isPrep){
   }
 
   const card=document.createElement("div");
-  card.className="game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isPrep?" prep-card":"");
+  const isGermany=g.ah==="Germany"||g.aa==="Germany";
+  card.className="game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isPrep?" prep-card":"")+(isGermany?" germany-game":"");
   card.innerHTML=
     "<div class='game-header' onclick='togglePanel(\"panel_"+g.id+"\")'>"
     +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+"</div>"
