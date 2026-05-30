@@ -1612,6 +1612,7 @@ function confirmPlayer(){
   const v=document.getElementById("pmSelect").value;
   if(!v)return;
   currentPlayer=v;
+  localStorage.setItem("wm26_player_lock",v);
   document.getElementById("playerSelect").value=v;
   document.getElementById("playerModal").classList.add("hidden");
   if(OS_APP_ID&&window.OneSignalDeferred){
