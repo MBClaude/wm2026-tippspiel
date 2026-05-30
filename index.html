@@ -795,22 +795,6 @@ function sendNotif(title,body){
   }
 }
 
-// 5-Minuten-Warnung vor Anpfiff
-function checkUpcomingGames(){
-  if(!currentPlayer)return;
-  const now=Date.now();
-  const allG=[...PREP_GAMES,...GAMES];
-  allG.forEach(g=>{
-    const [h,m]=g.time.split(":").map(Number);
-    const ko=new Date(g.date+"T"+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":00");
-    const diff=ko.getTime()-now;
-    const tip=allTips[currentPlayer+"_"+g.id];
-    if(diff>240000&&diff<360000&&!tip){
-      sendNotif("WM 2026 Tippspiel ⚽","Noch 5 Minuten bis "+g.home+" vs "+g.away+"! Du hast noch nicht getippt!");
-    }
-  });
-}
-setInterval(checkUpcomingGames,30000);
 
 // 18:00 Uhr Tages-Erinnerung — alle Spiele der nächsten 24h ohne Tipp
 let last18Reminder="";
