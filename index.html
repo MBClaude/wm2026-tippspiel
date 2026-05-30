@@ -171,6 +171,36 @@ select#playerSelect option{background:#145220;color:var(--text);}
 
 main{max-width:1600px;margin:0 auto;padding:24px 28px 80px;}
 
+/* ── LEADER BANNER ── */
+.leader-banner{max-width:1600px;margin:10px auto 0;padding:0 28px;}
+.leader-box{background:linear-gradient(90deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);border-radius:var(--rs);padding:9px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.leader-box .lb-crown{font-size:1.2rem;}
+.leader-box .lb-text{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--tmid);flex:1;}
+.leader-box .lb-name{color:var(--gold);font-weight:700;font-size:1rem;}
+.leader-box .lb-pts{font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--gold-l);letter-spacing:2px;}
+
+/* ── YOUTUBE LINK ── */
+.yt-link{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;letter-spacing:1px;color:#FF0000;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:600;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);padding:2px 8px;border-radius:20px;margin-top:2px;transition:all .2s;}
+.yt-link:hover{background:rgba(255,0,0,0.28);color:#fff;}
+
+/* ── FUN STATS ── */
+.fun-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px;}
+.fun-stat-card{background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:16px 18px;text-align:center;}
+.fun-stat-icon{font-size:1.8rem;margin-bottom:6px;}
+.fun-stat-label{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;letter-spacing:2px;color:var(--tdim);text-transform:uppercase;margin-bottom:8px;}
+.fun-stat-winner{font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:2px;color:var(--gold);}
+.fun-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:.82rem;color:var(--tdim);margin-top:3px;}
+
+/* ── STREAK ── */
+.streak-wrap{margin-bottom:28px;}
+.streak-row{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.05);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;}
+.streak-name{flex:1;font-weight:600;}
+.streak-dots{display:flex;gap:4px;flex-wrap:wrap;}
+.sd{width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,0.1);}
+.sd.hit{background:var(--bright);}
+.sd.miss{background:var(--red);opacity:.5;}
+.streak-val{font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:1px;color:var(--gold);min-width:40px;text-align:right;}
+
 /* ── SECTION TITLE ── */
 .sec-title{
   font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:4px;
@@ -454,6 +484,14 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
   <span class="last-update" id="lastUpdate"></span>
 </div>
 
+<div class="leader-banner" id="leaderBanner" style="display:none">
+  <div class="leader-box">
+    <span class="lb-crown">&#129351;</span>
+    <span class="lb-text">Aktuell f&uuml;hrt: <span class="lb-name" id="leaderName">—</span></span>
+    <span class="lb-pts" id="leaderPts"></span>
+  </div>
+</div>
+
 <div class="push-banner" id="pushBanner" style="display:none">
   <div class="push-box">
     <span>&#128276; <strong>Push-Benachrichtigungen</strong> &mdash; Werde 5 Min vor Anpfiff erinnert wenn du noch nicht getippt hast.</span>
@@ -510,7 +548,13 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
       </table>
     </div>
   </div>
-  <div class="sec-title" style="margin-top:20px">&#128081; VORRUNDENSIEGER</div>
+  <div class="sec-title" style="margin-top:28px">&#128293; TIPP-STREAK</div>
+  <div class="streak-wrap" id="streakSection"></div>
+
+  <div class="sec-title" style="margin-top:8px">&#127917; FUN-STATISTIKEN</div>
+  <div class="fun-stats-grid" id="funStatsSection"></div>
+
+  <div class="sec-title" style="margin-top:8px">&#128081; VORRUNDENSIEGER</div>
   <div id="groupWinnerSection">
     <p style="color:var(--tdim);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;letter-spacing:1px">Wird nach Ende der Vorrunde (29. Juni 2026) bekanntgegeben.</p>
   </div>
@@ -938,8 +982,89 @@ async function refresh(){
 }
 setInterval(refresh,2*60*1000);
 
+// ── LEADER BANNER ──
+function renderLeaderBanner(){
+  const allIds=[...PREP_GAMES,...GAMES,...KO_ROUNDS.flatMap(r=>r.slots)].map(g=>g.id);
+  const ranked=PLAYERS.map(p=>({p,pts:playerPts(p,allIds)})).sort((a,b)=>b.pts-a.pts);
+  const top=ranked[0];
+  const banner=document.getElementById("leaderBanner");
+  if(!top||top.pts===0){banner.style.display="none";return;}
+  document.getElementById("leaderName").textContent=top.p;
+  document.getElementById("leaderPts").textContent=top.pts+" Punkte";
+  banner.style.display="block";
+}
+
+// ── FUN STATS ──
+function renderFunStats(){
+  const sec=document.getElementById("funStatsSection");
+  if(!sec)return;
+  const allG=[...PREP_GAMES,...GAMES];
+  const finishedIds=allG.filter(g=>allResults[g.id]).map(g=>g.id);
+  if(finishedIds.length===0){sec.innerHTML="<p style='color:var(--tdim);font-family:\"Barlow Condensed\",sans-serif;font-size:.9rem;letter-spacing:1px;grid-column:1/-1'>Noch keine Ergebnisse für Statistiken.</p>";return;}
+
+  const stats=PLAYERS.map(p=>{
+    let totalGoals=0,exact=0,scored=0,missed=0,cleanSheet=0;
+    finishedIds.forEach(id=>{
+      const t=allTips[p+"_"+id];
+      const r=allResults[id];
+      if(!t)return;
+      totalGoals+=t.home+t.away;
+      const pts=calcPts(t,r);
+      if(pts===4)exact++;
+      if(pts!==null&&pts>0)scored++;else if(pts===0)missed++;
+      if(t.home===0&&t.away===0)cleanSheet++;
+    });
+    return{p,totalGoals,exact,scored,missed,cleanSheet};
+  });
+
+  function card(icon,label,winner,val){
+    return"<div class='fun-stat-card'><div class='fun-stat-icon'>"+icon+"</div><div class='fun-stat-label'>"+label+"</div><div class='fun-stat-winner'>"+winner+"</div><div class='fun-stat-val'>"+val+"</div></div>";
+  }
+  const mostGoals=[...stats].sort((a,b)=>b.totalGoals-a.totalGoals)[0];
+  const fewest=[...stats].sort((a,b)=>a.totalGoals-b.totalGoals)[0];
+  const mostExact=[...stats].sort((a,b)=>b.exact-a.exact)[0];
+  const mostMissed=[...stats].sort((a,b)=>b.missed-a.missed)[0];
+  const mostClean=[...stats].sort((a,b)=>b.cleanSheet-a.cleanSheet)[0];
+
+  sec.innerHTML=
+    card("&#9917;","Meiste Tore getippt",mostGoals.p,mostGoals.totalGoals+" Tore total")+
+    card("&#128737;","Defensivster Tipper",fewest.p,fewest.totalGoals+" Tore total")+
+    card("&#127919;","Meiste Exakttreffer",mostExact.p,mostExact.exact+"x Volltreffer (4P)")+
+    card("&#128128;","Meiste Nieten",mostMissed.p,mostMissed.missed+"x 0 Punkte")+
+    card("&#129354;","Fan von 0:0",mostClean.p,mostClean.cleanSheet+"x Nullnummer getippt");
+}
+
+// ── STREAK ──
+function renderStreak(){
+  const sec=document.getElementById("streakSection");
+  if(!sec)return;
+  const allG=[...PREP_GAMES,...GAMES].filter(g=>allResults[g.id]).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  if(allG.length===0){sec.innerHTML="<p style='color:var(--tdim);font-family:\"Barlow Condensed\",sans-serif;font-size:.9rem;letter-spacing:1px'>Noch keine Ergebnisse.</p>";return;}
+
+  const rows=PLAYERS.map(p=>{
+    let cur=0,best=0;
+    const dots=allG.map(g=>{
+      const pts=calcPts(allTips[p+"_"+g.id],allResults[g.id]);
+      const hit=pts!==null&&pts>0;
+      if(pts===null)return"<div class='sd' style='opacity:.2'></div>";
+      if(hit){cur++;best=Math.max(best,cur);return"<div class='sd hit'></div>";}
+      else{cur=0;return"<div class='sd miss'></div>";}
+    }).join("");
+    return{p,cur,best,dots};
+  }).sort((a,b)=>b.cur-a.cur||b.best-a.best);
+
+  sec.innerHTML=rows.map(r=>
+    "<div class='streak-row'>"
+    +"<span class='streak-name'>"+r.p+"</span>"
+    +"<div class='streak-dots'>"+r.dots+"</div>"
+    +"<span class='streak-val' title='Aktuelle Serie'>"+r.cur+"&#128293;</span>"
+    +"</div>"
+  ).join("");
+}
+
 function renderAll(){
   renderGames();renderPrepGames();renderBracket();renderRangliste();
+  renderLeaderBanner();renderFunStats();renderStreak();
   // Request notification permission if not yet asked
   if("Notification" in window&&Notification.permission==="default"&&currentPlayer&&OS_APP_ID){
     document.getElementById("pushBanner").style.display="block";
@@ -958,6 +1083,8 @@ function buildCard(g,isPrep){
   const pts=calcPts(tip,result);
   const isF=!!result,isL=live&&live.status==="live";
   const su=STREAM[g.date];
+  const ytQ=encodeURIComponent(g.ah+" vs "+g.aa+" Highlights WM 2026");
+  const ytLink=isF?"<a class='yt-link' href='https://www.youtube.com/results?search_query="+ytQ+"' target='_blank' onclick='event.stopPropagation()'>&#9654; Highlights</a>":"";
 
   let center;
   if(isF)center="<div class='score-big' style='color:var(--green-bright)'>"+result.home+":"+result.away+"</div>";
@@ -970,7 +1097,7 @@ function buildCard(g,isPrep){
   else if(locked)meta+="<span class='locked-badge'>&#128274; Gesperrt</span> ";
 
   const tagHtml=isPrep?"<span class='prep-tag'>DFB-Test &middot; "+(g.loc||"")+"</span>":"<span class='gtag'>Gruppe "+g.group+"</span>";
-  const sl=su?"<a class='stream-link' href='"+su+"' target='_blank' onclick='event.stopPropagation()'>&#128250; ARD/ZDF</a>":"";
+  const sl=(su&&!isF)?"<a class='stream-link' href='"+su+"' target='_blank' onclick='event.stopPropagation()'>&#128250; ARD/ZDF</a>":"";
 
   const tb=tip?"<span class='my-tip'>"+tip.home+":"+tip.away+"</span>":"<span class='my-tip none'>"+(locked?"&#8211;":"Kein Tipp")+"</span>";
   const pp=pts!==null?"<span class='pts "+ptsClass(pts)+"'>"+pts+"P</span>":"";
@@ -1003,7 +1130,7 @@ function buildCard(g,isPrep){
   card.className="game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isPrep?" prep-card":"")+(isGermany?" germany-game":"");
   card.innerHTML=
     "<div class='game-header' onclick='togglePanel(\"panel_"+g.id+"\")'>"
-    +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+"</div>"
+    +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+ytLink+"</div>"
     +"<div class='team-h'><span class='tname'>"+g.home+" "+flagImg(g.ah)+"</span></div>"
     +"<div class='vs-block'>"+center+"<div class='tip-cnt'>"+tipCount(g.id)+" / "+PLAYERS.length+" Tipps</div></div>"
     +"<div class='team-a'><span class='tname'>"+flagImg(g.aa)+" "+g.away+"</span></div>"
