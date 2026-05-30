@@ -308,7 +308,7 @@ table.sb tr:hover td{background:rgba(46,204,113,0.12);}
 .bk-left .bk-hl::before{content:'';position:absolute;left:-10px;top:50%;width:10px;border-top:2px solid rgba(212,175,55,0.45);}
 .bk-right .bk-hl::before{content:'';position:absolute;right:-10px;left:auto;top:50%;width:10px;border-top:2px solid rgba(212,175,55,0.45);}
 /* Match card */
-.bk-mc{background:rgba(10,45,18,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:5px 7px;width:100%;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;}
+.bk-mc{background:rgba(25,80,35,0.82);border:1px solid rgba(255,255,255,0.18);border-radius:7px;padding:5px 7px;width:100%;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;}
 .bk-mc.bk-germany{border-color:rgba(224,0,25,0.5);background:linear-gradient(135deg,rgba(0,0,0,0.45),rgba(224,0,25,0.12));}
 .bk-mc.bk-done{border-color:rgba(76,217,100,0.35);}
 .bk-team{display:flex;align-items:center;gap:4px;padding:2px 0;font-weight:600;color:var(--text);}
@@ -411,28 +411,83 @@ select#themeSelect{background:rgba(0,0,0,0.35);backdrop-filter:blur(10px);color:
 select#themeSelect:hover{border-color:var(--gold);}
 select#themeSelect option{background:#145220;color:var(--text);}
 
-/* ── THEME: HELL ── */
-body.theme-light{background:#dce8dc;--text:#0d2010;--tdim:rgba(0,0,0,0.45);--tmid:rgba(0,0,0,0.7);--glass:rgba(0,0,0,0.06);--glass-b:rgba(0,0,0,0.1);}
-body.theme-light header{background:rgba(220,235,220,0.95);border-bottom-color:rgba(20,100,40,0.2);}
-body.theme-light .game-card{background:rgba(255,255,255,0.75);border-color:rgba(0,0,0,0.1);}
-body.theme-light .game-card:hover{background:rgba(255,255,255,0.92);}
-body.theme-light .tip-panel{background:rgba(230,240,230,0.9);}
-body.theme-light .bracket-match{background:rgba(255,255,255,0.75);}
-body.theme-light .bracket-match:hover{background:rgba(255,255,255,0.92);}
-body.theme-light table.sb td{background:rgba(255,255,255,0.6);}
-body.theme-light .day-header{color:rgba(0,0,0,0.4);border-left-color:rgba(0,0,0,0.15);}
-body.theme-light select#playerSelect,body.theme-light select#themeSelect{background:rgba(255,255,255,0.5);color:#0d5020;}
-body.theme-light .btn-glass{background:rgba(0,0,0,0.08);border-color:rgba(0,0,0,0.15);color:#0d2010;}
-body.theme-light .tabs-wrap{border-bottom-color:rgba(0,0,0,0.12);}
-body.theme-light .tab-btn{color:rgba(0,0,0,0.4);}
-body.theme-light .tab-btn:hover{color:#0d2010;}
-body.theme-light .filter-btn{background:rgba(0,0,0,0.07);border-color:rgba(0,0,0,0.1);color:rgba(0,0,0,0.5);}
-body.theme-light .past-toggle{background:rgba(0,0,0,0.07);border-color:rgba(0,0,0,0.1);}
-body.theme-light .api-bar,.body.theme-light .tabs-wrap{background:transparent;}
+/* ══ THEMES ══ */
 
-/* ── THEME: STADION ── */
+/* Shared light-mode helpers */
+.theme-light body,.theme-sand body,.theme-blue-light body{color:#111;}
+
+/* ── HELL (Hellgrün) ── */
+body.theme-light{background:#e4ede4;--text:#0d2010;--tdim:rgba(0,0,0,0.45);--tmid:rgba(0,0,0,0.72);}
+body.theme-light header{background:rgba(200,225,200,0.97);border-bottom:1px solid rgba(0,100,40,0.2);}
+body.theme-light .game-card{background:rgba(255,255,255,0.82);border-color:rgba(0,0,0,0.1);color:#0d2010;}
+body.theme-light .game-card:hover{background:#fff;}
+body.theme-light .tip-panel{background:rgba(225,240,225,0.95);}
+body.theme-light table.sb td{background:rgba(255,255,255,0.7);color:#0d2010;}
+body.theme-light table.sb th{color:#0d5020;}
+body.theme-light .day-header,.theme-light .bk-col-hd{color:rgba(0,0,0,0.4);}
+body.theme-light select#playerSelect,body.theme-light select#themeSelect{background:rgba(255,255,255,0.7);color:#0d5020;}
+body.theme-light .tab-btn{color:rgba(0,0,0,0.45);}
+body.theme-light .tab-btn:hover{color:#0d2010;}
+body.theme-light .filter-btn{background:rgba(0,0,0,0.07);border-color:rgba(0,0,0,0.1);color:rgba(0,0,0,0.55);}
+body.theme-light .past-toggle{background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.1);color:rgba(0,0,0,0.5);}
+body.theme-light .bk-mc{background:rgba(255,255,255,0.85);color:#0d2010;border-color:rgba(0,0,0,0.12);}
+body.theme-light .bk-team{color:#0d2010;}
+body.theme-light .pm-box{background:linear-gradient(135deg,#f0f8f0,#e0eee0);}
+body.theme-light select#pmSelect{background:#fff;color:#0d5020;}
+
+/* ── SAND (Helles Beige) ── */
+body.theme-sand{background:#f0e8d8;--text:#2a1a08;--tdim:rgba(0,0,0,0.45);--tmid:rgba(0,0,0,0.7);--gold:#b8860b;--gold-l:#d4a017;--bright:#2d7a3a;--bright2:#256830;}
+body.theme-sand header{background:rgba(235,220,195,0.97);border-bottom:1px solid rgba(120,90,40,0.25);}
+body.theme-sand .game-card{background:rgba(255,250,240,0.88);border-color:rgba(120,90,40,0.15);color:#2a1a08;}
+body.theme-sand .game-card:hover{background:rgba(255,252,245,0.98);}
+body.theme-sand .tip-panel{background:rgba(240,230,210,0.95);}
+body.theme-sand table.sb td{background:rgba(255,250,240,0.75);color:#2a1a08;}
+body.theme-sand .tab-btn{color:rgba(42,26,8,0.45);}
+body.theme-sand .filter-btn{background:rgba(0,0,0,0.07);border-color:rgba(120,90,40,0.2);color:rgba(42,26,8,0.6);}
+body.theme-sand .past-toggle{background:rgba(0,0,0,0.06);border-color:rgba(120,90,40,0.2);color:rgba(42,26,8,0.55);}
+body.theme-sand .bk-mc{background:rgba(255,250,240,0.9);color:#2a1a08;border-color:rgba(120,90,40,0.18);}
+body.theme-sand .bk-team{color:#2a1a08;}
+body.theme-sand .pm-box{background:linear-gradient(135deg,#f5ead8,#ede0c4);}
+body.theme-sand select#pmSelect{background:#fff8ee;color:#5a3a08;}
+body.theme-sand select#playerSelect,body.theme-sand select#themeSelect{background:rgba(255,250,240,0.8);color:#5a3a08;}
+
+/* ── BLAU (Dunkelblau) ── */
+body.theme-blue{background:#0e1829;--text:#e8f0ff;--tdim:rgba(200,220,255,0.5);--tmid:rgba(220,235,255,0.8);--gold:#f0c040;--gold-l:#f8d060;--bright:#4db8ff;--bright2:#2299ee;}
+body.theme-blue header{background:rgba(8,16,36,0.92);border-bottom:1px solid rgba(77,184,255,0.2);}
+body.theme-blue .game-card{background:rgba(15,30,60,0.78);border-color:rgba(77,184,255,0.15);}
+body.theme-blue .game-card:hover{background:rgba(20,40,80,0.88);}
+body.theme-blue .tip-panel{background:rgba(10,20,45,0.9);}
+body.theme-blue table.sb td{background:rgba(15,30,60,0.6);}
+body.theme-blue .tab-btn{color:rgba(200,220,255,0.4);}
+body.theme-blue .tab-btn.active{color:var(--bright);border-bottom-color:var(--bright);}
+body.theme-blue .filter-btn{background:rgba(77,184,255,0.08);border-color:rgba(77,184,255,0.2);color:rgba(200,220,255,0.5);}
+body.theme-blue .filter-btn.active{background:rgba(77,184,255,0.2);color:var(--bright);border-color:var(--bright);}
+body.theme-blue .past-toggle{background:rgba(77,184,255,0.07);border-color:rgba(77,184,255,0.15);color:rgba(200,220,255,0.5);}
+body.theme-blue .bk-mc{background:rgba(12,25,55,0.88);border-color:rgba(77,184,255,0.18);}
+body.theme-blue select#playerSelect,body.theme-blue select#themeSelect{background:rgba(15,30,60,0.8);color:#f0c040;}
+body.theme-blue .pm-box{background:linear-gradient(135deg,rgba(12,25,55,0.97),rgba(8,18,40,0.97));}
+
+/* ── NACHT (Sehr dunkel) ── */
+body.theme-night{background:#050505;--text:#e0e0e0;--tdim:rgba(255,255,255,0.35);--tmid:rgba(255,255,255,0.65);--gold:#e8b800;--gold-l:#f5cc00;--g1:#111;--g2:#151515;--bright:#39ff14;--bright2:#2ecc11;}
+body.theme-night header{background:rgba(0,0,0,0.95);border-bottom:1px solid rgba(57,255,20,0.15);}
+body.theme-night .game-card{background:rgba(15,15,15,0.92);border-color:rgba(255,255,255,0.08);}
+body.theme-night .game-card:hover{background:rgba(25,25,25,0.98);border-color:rgba(57,255,20,0.2);}
+body.theme-night .tip-panel{background:rgba(10,10,10,0.95);}
+body.theme-night table.sb td{background:rgba(15,15,15,0.8);}
+body.theme-night .tab-btn{color:rgba(255,255,255,0.3);}
+body.theme-night .tab-btn.active{color:var(--bright);border-bottom-color:var(--bright);}
+body.theme-night .filter-btn{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);}
+body.theme-night .past-toggle{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.07);color:rgba(255,255,255,0.4);}
+body.theme-night .bk-mc{background:rgba(18,18,18,0.95);border-color:rgba(255,255,255,0.1);}
+body.theme-night select#playerSelect,body.theme-night select#themeSelect{background:rgba(20,20,20,0.9);color:#e8b800;}
+body.theme-night .pm-box{background:linear-gradient(135deg,#111,#0a0a0a);}
+
+/* ── STADION ── */
 body.theme-stadium{background:#0a0a0a;background-image:url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1920&q=80');background-size:cover;background-position:center;background-attachment:fixed;}
 body.theme-stadium::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:rgba(0,0,0,0.72);}
+
+/* Bracket card base — gut lesbar in allen Themes */
+
 
 /* ── PLAYER MODAL ── */
 #playerModal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);}
@@ -489,7 +544,10 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
       <label for="themeSelect">Design:</label>
       <select id="themeSelect" onchange="setTheme(this.value)">
         <option value="dark">🌿 Dunkel</option>
-        <option value="light">☀️ Hell</option>
+        <option value="light">🌱 Hellgrün</option>
+        <option value="sand">🏖️ Sand</option>
+        <option value="blue">🌊 Blau</option>
+        <option value="night">🌑 Nacht</option>
         <option value="stadium">🏟️ Stadion</option>
       </select>
     </div>
@@ -1496,11 +1554,10 @@ function showToast(msg,bg){
 
 // ── THEME ──
 function setTheme(t){
-  document.body.classList.remove("theme-light","theme-stadium");
-  if(t==="light")document.body.classList.add("theme-light");
-  if(t==="stadium")document.body.classList.add("theme-stadium");
+  document.body.classList.remove("theme-light","theme-sand","theme-blue","theme-night","theme-stadium");
+  if(t&&t!=="dark")document.body.classList.add("theme-"+t);
   localStorage.setItem("wm26_theme",t);
-  document.getElementById("themeSelect").value=t;
+  document.getElementById("themeSelect").value=t||"dark";
 }
 (function(){const t=localStorage.getItem("wm26_theme")||"dark";setTheme(t);})();
 
