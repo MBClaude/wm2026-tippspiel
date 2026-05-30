@@ -713,7 +713,7 @@ async function sbFetch(path,opts={}){
 async function loadAllTips(){const rows=await sbFetch("tips?select=player,game_id,home_score,away_score");allTips={};rows.forEach(r=>allTips[r.player+"_"+r.game_id]={home:r.home_score,away:r.away_score});}
 async function loadAllResults(){const rows=await sbFetch("results?select=game_id,home_score,away_score,status");allResults={};rows.forEach(r=>allResults[r.game_id]={home:r.home_score,away:r.away_score,status:r.status});}
 async function upsertTip(player,gid,h,a){
-  await sbFetch("tips",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=representation"},body:JSON.stringify({player,game_id:gid,home_score:h,away_score:a,updated_at:new Date().toISOString()})});
+  await sbFetch("tips?on_conflict=player,game_id",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=representation"},body:JSON.stringify({player,game_id:gid,home_score:h,away_score:a,updated_at:new Date().toISOString()})});
   allTips[player+"_"+gid]={home:h,away:a};
   checkAllTipped(gid);
 }
