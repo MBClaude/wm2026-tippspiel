@@ -788,29 +788,58 @@ async function enablePush(){
   });
 }
 
-// Check upcoming games every minute and send local reminder
+// ── NOTIFICATIONS ──
+function sendNotif(title,body){
+  if("Notification" in window&&Notification.permission==="granted"){
+    new Notification(title,{body,icon:"/favicon.ico"});
+  }
+}
+
+// 5-Minuten-Warnung vor Anpfiff
 function checkUpcomingGames(){
-  if(!currentPlayer) return;
+  if(!currentPlayer)return;
   const now=Date.now();
   const allG=[...PREP_GAMES,...GAMES];
   allG.forEach(g=>{
     const [h,m]=g.time.split(":").map(Number);
     const ko=new Date(g.date+"T"+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":00");
-    const koUTC=ko.getTime()-2*3600*1000;
-    const diff=koUTC-now;
+    const diff=ko.getTime()-now;
     const tip=allTips[currentPlayer+"_"+g.id];
-    // Between 6 and 4 minutes before kickoff, no tip yet
     if(diff>240000&&diff<360000&&!tip){
-      if("Notification" in window&&Notification.permission==="granted"){
-        new Notification("WM 2026 Tippspiel &#9917;",{
-          body:"Noch 5 Minuten bis "+g.home+" vs "+g.away+"! Du hast noch nicht getippt!",
-          icon:"/favicon.ico"
-        });
-      }
+      sendNotif("WM 2026 Tippspiel ⚽","Noch 5 Minuten bis "+g.home+" vs "+g.away+"! Du hast noch nicht getippt!");
     }
   });
 }
 setInterval(checkUpcomingGames,30000);
+
+// 18:00 Uhr Tages-Erinnerung — alle Spiele der nächsten 24h ohne Tipp
+let last18Reminder="";
+function check18Reminder(){
+  if(!currentPlayer)return;
+  const now=new Date();
+  const h=now.getHours(),mn=now.getMinutes();
+  const today=now.toISOString().slice(0,10);
+  // Nur einmal pro Tag zwischen 18:00 und 18:05 auslösen
+  if(h!==18||mn>5)return;
+  if(last18Reminder===today)return;
+  last18Reminder=today;
+
+  const in24h=now.getTime()+24*3600*1000;
+  const allG=[...PREP_GAMES,...GAMES];
+  const missing=allG.filter(g=>{
+    if(allTips[currentPlayer+"_"+g.id])return false; // schon getippt
+    const [gh,gm]=g.time.split(":").map(Number);
+    const ko=new Date(g.date+"T"+String(gh).padStart(2,"0")+":"+String(gm).padStart(2,"0")+":00");
+    return ko.getTime()>now.getTime()&&ko.getTime()<in24h;
+  });
+  if(missing.length===0)return;
+  const names=missing.map(g=>g.home+" vs "+g.away).join(", ");
+  sendNotif("⏰ WM Tippspiel Erinnerung — "+currentPlayer,
+    missing.length+" Spiel"+(missing.length>1?"e":"")+" noch ohne Tipp: "+names);
+}
+setInterval(check18Reminder,60000);
+// Sofort beim Laden prüfen (falls App genau um 18 Uhr geöffnet wird)
+setTimeout(check18Reminder,3000);
 
 // ── SUPABASE ──
 async function sbFetch(path,opts={}){
