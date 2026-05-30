@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WM 2026 Tippspiel</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
 <style>
 :root {
   --gold:#D4AF37; --gold-l:#F0D060;
@@ -256,7 +255,7 @@ table.sb tr:hover td{background:rgba(46,204,113,0.12);}
 .stream-link:hover{background:rgba(52,152,219,0.3);color:#fff;}
 .team-h{text-align:right;}.team-a{text-align:left;}
 .tname{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:1px;}
-.tflag{font-size:1.3rem;display:inline;margin:0 5px 0 0;}
+.tflag{display:inline-block;vertical-align:middle;margin:0 5px 0 0;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.4);}
 .team-h .tflag{margin:0 0 0 5px;}
 
 /* ── PAST GAMES COLLAPSE ── */
@@ -538,6 +537,26 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
 const PLAYERS=["Alexander","Axel","Bastian","Christian","Klaus","Lars","Maik","Matthias","Michael","Roland","Sabine","Steffen","Thomas","Usman"];
+
+// ── FLAG IMAGES ──
+const CODES={
+  "Germany":"de","Germany ":"de","Japan":"jp","Mexico":"mx","Ecuador":"ec",
+  "USA":"us","Canada":"ca","Uruguay":"uy","Kenya":"ke","Spain":"es","Bahrain":"bh",
+  "France":"fr","Colombia":"co","Brazil":"br","Cameroon":"cm","England":"gb",
+  "Serbia":"rs","Portugal":"pt","Angola":"ao","Argentina":"ar","Iraq":"iq",
+  "Panama":"pa","New Zealand":"nz","Netherlands":"nl","Senegal":"sn","Bolivia":"bo",
+  "Belgium":"be","Morocco":"ma","Haiti":"ht","Australia":"au","Guinea":"gn",
+  "Croatia":"hr","Chile":"cl","South Korea":"kr","Algeria":"dz","Turkey":"tr",
+  "Venezuela":"ve","Saudi Arabia":"sa","Malaysia":"my","Poland":"pl","Austria":"at",
+  "UAE":"ae","Cuba":"cu","Hungary":"hu","Paraguay":"py","Nigeria":"ng","Finland":"fi",
+  "TBD":"xx"
+};
+function flagImg(en,size){
+  const s=size||24;
+  const code=(CODES[en]||"xx").toLowerCase();
+  if(code==="xx")return"";
+  return"<img class='tflag' src='https://flagcdn.com/"+s+"x"+(Math.round(s*0.75))+"/" +code+".png' alt='"+en+"' width='"+s+"' height='"+(Math.round(s*0.75))+"'>";
+}
 
 const STREAM={
   "2026-05-31":"https://www.ardmediathek.de/live/das-erste",
@@ -905,7 +924,6 @@ setInterval(refresh,2*60*1000);
 
 function renderAll(){
   renderGames();renderPrepGames();renderBracket();renderRangliste();
-  setTimeout(parseTwemoji,50);
   // Request notification permission if not yet asked
   if("Notification" in window&&Notification.permission==="default"&&currentPlayer&&OS_APP_ID){
     document.getElementById("pushBanner").style.display="block";
@@ -969,9 +987,9 @@ function buildCard(g,isPrep){
   card.innerHTML=
     "<div class='game-header' onclick='togglePanel(\"panel_"+g.id+"\")'>"
     +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+"</div>"
-    +"<div class='team-h'><span class='tname'>"+g.home+" <span class='tflag'>"+g.hf+"</span></span></div>"
+    +"<div class='team-h'><span class='tname'>"+g.home+" "+flagImg(g.ah)+"</span></div>"
     +"<div class='vs-block'>"+center+"<div class='tip-cnt'>"+tipCount(g.id)+" / "+PLAYERS.length+" Tipps</div></div>"
-    +"<div class='team-a'><span class='tname'><span class='tflag'>"+g.af+"</span> "+g.away+"</span></div>"
+    +"<div class='team-a'><span class='tname'>"+flagImg(g.aa)+" "+g.away+"</span></div>"
     +"<div class='game-status-col'>"+tb+pp+"</div>"
     +"</div>"
     +"<div class='tip-panel' id='panel_"+g.id+"'>"
@@ -1091,7 +1109,7 @@ function renderBracket(){
       card.className="bracket-match"+(isF?" finished":"");
       card.innerHTML="<div class='bm-label'><span>"+slot.label+" &middot; "+fmtDate(slot.date)+"</span>"
         +"<a class='stream-link' href='"+su+"' target='_blank'>&#128250; Stream</a></div>"
-        +"<div class='bm-teams'><div class='bm-team home'>"+kg.home+"</div>"+scoreH+"<div class='bm-team away'>"+kg.away+"</div></div>"
+        +"<div class='bm-teams'><div class='bm-team home'>"+kg.home+" "+flagImg(kg.home,20)+"</div>"+scoreH+"<div class='bm-team away'>"+flagImg(kg.away,20)+" "+kg.away+"</div></div>"
         +tipH;
       grid.appendChild(card);
     });
@@ -1207,10 +1225,6 @@ function setTheme(t){
 }
 (function(){const t=localStorage.getItem("wm26_theme")||"dark";setTheme(t);})();
 
-// ── TWEMOJI ──
-function parseTwemoji(){
-  if(window.twemoji)twemoji.parse(document.body,{folder:"svg",ext:".svg",base:"https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/"});
-}
 
 // ── PLAYER MODAL ──
 document.getElementById("pmSelect").addEventListener("change",function(){
