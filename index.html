@@ -768,6 +768,7 @@ function saveConfig(){
 
 // ── ONESIGNAL ──
 function initOneSignal(){
+  OS_APP_ID=OS_APP_ID||"880cad78-7ba0-4aef-b38e-b753b79415a6";
   if(!OS_APP_ID)return;
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   OneSignalDeferred.push(async function(OneSignal){
