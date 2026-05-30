@@ -486,6 +486,10 @@ body.theme-night .pm-box{background:linear-gradient(135deg,#111,#0a0a0a);}
 body.theme-stadium{background:#0a0a0a;background-image:url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1920&q=80');background-size:cover;background-position:center;background-attachment:fixed;}
 body.theme-stadium::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:rgba(0,0,0,0.72);}
 
+/* Bracket slot meta */
+.bk-slot-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;color:var(--tdim);text-align:center;line-height:1.3;margin-bottom:2px;letter-spacing:.3px;}
+.bk-slot-date{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;color:var(--tdim);text-align:center;margin-top:2px;letter-spacing:.3px;}
+
 /* Bracket card base — gut lesbar in allen Themes */
 
 
@@ -841,6 +845,30 @@ const KO_ROUNDS=[
     {id:141,label:"Platz 3",date:"2026-07-25",time:"21:00"},{id:142,label:"&#127942; FINALE",date:"2026-07-26",time:"21:00"},
   ]},
 ];
+
+// ── SLOT LABELS (Qualifikations-Beschreibung) ──
+const SLOT_LABELS={
+  101:{h:"1. Gruppe A",a:"2. Gruppe C"},  102:{h:"1. Gruppe C",a:"2. Gruppe A"},
+  103:{h:"1. Gruppe B",a:"2. Gruppe D"},  104:{h:"1. Gruppe D",a:"2. Gruppe B"},
+  105:{h:"1. Gruppe E",a:"2. Gruppe G"},  106:{h:"1. Gruppe G",a:"2. Gruppe E"},
+  107:{h:"1. Gruppe F",a:"2. Gruppe H"},  108:{h:"1. Gruppe H",a:"2. Gruppe F"},
+  109:{h:"1. Gruppe I",a:"2. Gruppe K"},  110:{h:"1. Gruppe K",a:"2. Gruppe I"},
+  111:{h:"1. Gruppe J",a:"2. Gruppe L"},  112:{h:"1. Gruppe L",a:"2. Gruppe J"},
+  113:{h:"3. Platz 1",a:"3. Platz 2"},   114:{h:"3. Platz 3",a:"3. Platz 4"},
+  115:{h:"3. Platz 5",a:"3. Platz 6"},   116:{h:"3. Platz 7",a:"3. Platz 8"},
+  151:{h:"Sieger R32-1",a:"Sieger R32-2"},152:{h:"Sieger R32-3",a:"Sieger R32-4"},
+  153:{h:"Sieger R32-5",a:"Sieger R32-6"},154:{h:"Sieger R32-7",a:"Sieger R32-8"},
+  155:{h:"Sieger R32-9",a:"Sieger R32-10"},156:{h:"Sieger R32-11",a:"Sieger R32-12"},
+  157:{h:"Sieger R32-13",a:"Sieger R32-14"},158:{h:"Sieger R32-15",a:"Sieger R32-16"},
+  121:{h:"Sieger AF-1",a:"Sieger AF-2"}, 122:{h:"Sieger AF-3",a:"Sieger AF-4"},
+  123:{h:"Sieger AF-5",a:"Sieger AF-6"}, 124:{h:"Sieger AF-7",a:"Sieger AF-8"},
+  131:{h:"Sieger VF-1",a:"Sieger VF-2"}, 132:{h:"Sieger VF-3",a:"Sieger VF-4"},
+  141:{h:"Verlierer HF-1",a:"Verlierer HF-2"},
+  142:{h:"Sieger HF-1",a:"Sieger HF-2"},
+};
+// Slot-Lookup für schnellen Zugriff
+const ALL_SLOTS={};
+// (wird nach KO_ROUNDS-Init befüllt, siehe unten)
 
 // ── STATE ──
 let SB_URL="",SB_KEY="",WC_KEY="",OS_APP_ID="";
@@ -1366,8 +1394,8 @@ function renderPrepGames(){
 
 // ── BRACKET MATCH CARD ──
 function bkCard(slotId){
-  const slotMap={};KO_ROUNDS.forEach(r=>r.slots.forEach(s=>{slotMap[s.id]=s;}));
-  const slot=slotMap[slotId];
+  if(!Object.keys(ALL_SLOTS).length)KO_ROUNDS.forEach(r=>r.slots.forEach(s=>{ALL_SLOTS[s.id]=s;}));
+  const slot=ALL_SLOTS[slotId];
   const kg=koGames[slotId]||{home:"TBD",away:"TBD"};
   const result=allResults[slotId];
   const tip=allTips[currentPlayer+"_"+slotId];
@@ -1404,7 +1432,12 @@ function bkCard(slotId){
         +"</div>";
     }
   }
-  return"<div class='"+cls+"'>"+body+tipRow+"</div>";
+  // Label oben (Qualifikations-Herkunft)
+  const lbl=SLOT_LABELS[slotId];
+  const lblH=lbl?"<div class='bk-slot-lbl'>"+lbl.h+" – "+lbl.a+"</div>":"";
+  // Datum unten
+  const dateH=slot?"<div class='bk-slot-date'>"+new Date(slot.date+"T12:00:00").toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"short"})+" · "+slot.time+" Uhr</div>":"";
+  return lblH+"<div class='"+cls+"'>"+body+tipRow+"</div>"+dateH;
 }
 
 function renderBracket(){
