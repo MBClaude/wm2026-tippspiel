@@ -697,12 +697,18 @@ setInterval(checkUpcomingGames,30000);
 // ── SUPABASE ──
 async function sbFetch(path,opts={}){
   if(!SB_URL||!SB_KEY)throw new Error("Keine Konfiguration");
-  const res=await fetch(SB_URL+"/rest/v1/"+path,{
-    headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":"return=representation",...(opts.headers||{})},
-    ...opts
-  });
+  const headers={
+    "apikey":SB_KEY,
+    "Authorization":"Bearer "+SB_KEY,
+    "Content-Type":"application/json",
+    "Prefer":"return=representation",
+    ...(opts.headers||{})
+  };
+  const res=await fetch(SB_URL+"/rest/v1/"+path,{...opts,headers});
   if(!res.ok){const t=await res.text();throw new Error(t);}
-  return res.json();
+  // handle empty responses (DELETE etc)
+  const txt=await res.text();
+  return txt?JSON.parse(txt):[];
 }
 async function loadAllTips(){const rows=await sbFetch("tips?select=player,game_id,home_score,away_score");allTips={};rows.forEach(r=>allTips[r.player+"_"+r.game_id]={home:r.home_score,away:r.away_score});}
 async function loadAllResults(){const rows=await sbFetch("results?select=game_id,home_score,away_score,status");allResults={};rows.forEach(r=>allResults[r.game_id]={home:r.home_score,away:r.away_score,status:r.status});}
