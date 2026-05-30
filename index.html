@@ -1483,12 +1483,12 @@ function renderBracket(){
   h+="<div class='bk-3rd-lbl'>&#129350; PLATZ 3</div>";
   h+="<div class='bk-center-mc'>"+bkCard(141)+"</div>";
   h+="</div>";
-  // Rechte Seite
+  // Rechte Seite (DOM-Reihenfolge umgekehrt wegen flex-direction:row-reverse)
   h+="<div class='bk-side bk-right'>";
-  h+=col("Halbfinale",[[132]],true);
-  h+=col("Viertelfinale",[[123,124]],true);
-  h+=col("Achtelfinale",[[155,156],[157,158]],true);
   h+=col("Runde d.32",[[109,110],[111,112],[113,114],[115,116]],false);
+  h+=col("Achtelfinale",[[155,156],[157,158]],true);
+  h+=col("Viertelfinale",[[123,124]],true);
+  h+=col("Halbfinale",[[132]],true);
   h+="</div>";
   h+="</div></div>";
   sec.innerHTML=h;
