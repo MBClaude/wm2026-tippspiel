@@ -255,7 +255,14 @@ table.sb tr:hover td{background:rgba(46,204,113,0.12);}
 .stream-link:hover{background:rgba(52,152,219,0.3);color:#fff;}
 .team-h{text-align:right;}.team-a{text-align:left;}
 .tname{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:1px;}
-.tflag{font-size:1.6rem;display:block;margin-bottom:2px;}
+.tflag{font-size:1.3rem;display:inline;margin:0 5px 0 0;}
+.team-h .tflag{margin:0 0 0 5px;}
+
+/* ── PAST GAMES COLLAPSE ── */
+.past-toggle{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--tdim);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;cursor:pointer;text-align:left;margin-top:8px;margin-bottom:4px;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
+.past-toggle:hover{background:rgba(255,255,255,0.1);color:var(--text);}
+.past-section{display:none;}.past-section.open{display:block;}
+.past-arrow{transition:transform .2s;}.past-arrow.open{transform:rotate(180deg);}
 .vs-block{text-align:center;}
 .vs-txt{font-family:'Bebas Neue',cursive;font-size:1.4rem;color:rgba(255,255,255,0.4);letter-spacing:2px;}
 .score-big{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:3px;}
@@ -415,8 +422,8 @@ select#pmSelect option{background:#0B3512;color:var(--text);}
 </div>
 
 <div class="tabs-wrap">
-  <button class="tab-btn active" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
-  <button class="tab-btn" onclick="switchTab('vorbereitung')">&#127881; DFB-Testspiele</button>
+  <button class="tab-btn active" onclick="switchTab('vorbereitung')">&#127881; DFB-Testspiele</button>
+  <button class="tab-btn" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
   <button class="tab-btn" onclick="switchTab('bracket')">&#127942; Turnierbaum</button>
   <button class="tab-btn" onclick="switchTab('rangliste')">&#127945; Rangliste</button>
 </div>
@@ -609,7 +616,7 @@ const KO_ROUNDS=[
 
 // ── STATE ──
 let SB_URL="",SB_KEY="",WC_KEY="",OS_APP_ID="";
-let currentPlayer="",currentFilter="all",currentTab="vorrunde";
+let currentPlayer="",currentFilter="all",currentTab="vorbereitung";
 let allTips={},allResults={},liveData={},koGames={};
 
 // ── CONFIG ──
@@ -922,9 +929,9 @@ function buildCard(g,isPrep){
   card.innerHTML=
     "<div class='game-header' onclick='togglePanel(\"panel_"+g.id+"\")'>"
     +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+"</div>"
-    +"<div class='team-h'><span class='tflag'>"+g.hf+"</span><span class='tname'>"+g.home+"</span></div>"
+    +"<div class='team-h'><span class='tname'>"+g.home+" <span class='tflag'>"+g.hf+"</span></span></div>"
     +"<div class='vs-block'>"+center+"<div class='tip-cnt'>"+tipCount(g.id)+" / "+PLAYERS.length+" Tipps</div></div>"
-    +"<div class='team-a'><span class='tflag'>"+g.af+"</span><span class='tname'>"+g.away+"</span></div>"
+    +"<div class='team-a'><span class='tname'><span class='tflag'>"+g.af+"</span> "+g.away+"</span></div>"
     +"<div class='game-status-col'>"+tb+pp+"</div>"
     +"</div>"
     +"<div class='tip-panel' id='panel_"+g.id+"'>"
@@ -940,9 +947,13 @@ function renderGames(){
   if(!currentPlayer){nm.style.display="block";sec.querySelectorAll(".day-group").forEach(e=>e.remove());return;}
   nm.style.display="none";
   const openPanels=new Set([...sec.querySelectorAll(".tip-panel.open")].map(e=>e.id));
-  sec.querySelectorAll(".day-group").forEach(e=>e.remove());
+  sec.querySelectorAll(".day-group,.past-toggle,.past-section").forEach(e=>e.remove());
   let games=currentFilter==="all"?GAMES:GAMES.filter(g=>g.group===currentFilter);
-  const byDate={};games.forEach(g=>{if(!byDate[g.date])byDate[g.date]=[];byDate[g.date].push(g);});
+  const today=new Date().toISOString().slice(0,10);
+  const future=games.filter(g=>g.date>=today);
+  const past=games.filter(g=>g.date<today);
+
+  const byDate={};future.forEach(g=>{if(!byDate[g.date])byDate[g.date]=[];byDate[g.date].push(g);});
   Object.keys(byDate).sort().forEach(date=>{
     const dg=document.createElement("div");dg.className="day-group";
     dg.innerHTML="<div class='day-header'>"+fmtDate(date)+"</div>";
@@ -952,6 +963,25 @@ function renderGames(){
       dg.appendChild(card);
     });sec.appendChild(dg);
   });
+
+  if(past.length>0){
+    const btn=document.createElement("button");
+    btn.className="past-toggle";
+    btn.innerHTML="&#9660; <span>"+past.length+" vergangene Spiele</span><span class='past-arrow' id='pastArrowG'>&#9650;</span>";
+    const box=document.createElement("div");box.className="past-section";
+    const pByDate={};past.forEach(g=>{if(!pByDate[g.date])pByDate[g.date]=[];pByDate[g.date].push(g);});
+    Object.keys(pByDate).sort().reverse().forEach(date=>{
+      const dg=document.createElement("div");dg.className="day-group";
+      dg.innerHTML="<div class='day-header'>"+fmtDate(date)+"</div>";
+      pByDate[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(g=>{
+        const card=buildCard(g,false);
+        if(openPanels.has("panel_"+g.id))card.querySelector(".tip-panel").classList.add("open");
+        dg.appendChild(card);
+      });box.appendChild(dg);
+    });
+    btn.onclick=()=>{box.classList.toggle("open");document.getElementById("pastArrowG").classList.toggle("open");};
+    sec.appendChild(btn);sec.appendChild(box);
+  }
 }
 
 function renderPrepGames(){
@@ -959,11 +989,27 @@ function renderPrepGames(){
   if(!currentPlayer){sec.innerHTML="<div class='no-player-msg'>W&auml;hle deinen <span>Namen</span>.</div>";return;}
   const openPanels=new Set([...sec.querySelectorAll(".tip-panel.open")].map(e=>e.id));
   sec.innerHTML="";
-  PREP_GAMES.forEach(g=>{
+  const today=new Date().toISOString().slice(0,10);
+  const future=PREP_GAMES.filter(g=>g.date>=today);
+  const past=PREP_GAMES.filter(g=>g.date<today);
+  future.forEach(g=>{
     const card=buildCard(g,true);
     if(openPanels.has("panel_"+g.id))card.querySelector(".tip-panel").classList.add("open");
     sec.appendChild(card);
   });
+  if(past.length>0){
+    const btn=document.createElement("button");
+    btn.className="past-toggle";
+    btn.innerHTML="&#9660; <span>"+past.length+" vergangene Testspiele</span><span class='past-arrow' id='pastArrowP'>&#9650;</span>";
+    const box=document.createElement("div");box.className="past-section";
+    [...past].reverse().forEach(g=>{
+      const card=buildCard(g,true);
+      if(openPanels.has("panel_"+g.id))card.querySelector(".tip-panel").classList.add("open");
+      box.appendChild(card);
+    });
+    btn.onclick=()=>{box.classList.toggle("open");document.getElementById("pastArrowP").classList.toggle("open");};
+    sec.appendChild(btn);sec.appendChild(box);
+  }
 }
 
 function renderBracket(){
@@ -1148,6 +1194,7 @@ document.querySelectorAll(".filter-btn").forEach(btn=>{
 // ── INIT ──
 loadConfig();
 buildKOBracket();
+switchTab("vorbereitung");
 renderAll();
 refresh();
 initOneSignal();
