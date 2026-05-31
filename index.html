@@ -1382,6 +1382,8 @@ function renderPrepGames(){
   const future=PREP_GAMES.filter(g=>g.date>=today);
   const past=PREP_GAMES.filter(g=>g.date<today);
   future.forEach(g=>{
+    const dh=document.createElement("div");dh.className="day-header";dh.textContent=fmtDate(g.date);
+    sec.appendChild(dh);
     const card=buildCard(g,true);
     if(openPanels.has("panel_"+g.id))card.querySelector(".tip-panel").classList.add("open");
     sec.appendChild(card);
@@ -1392,6 +1394,7 @@ function renderPrepGames(){
     btn.innerHTML="&#9660; <span>"+past.length+" vergangene Testspiele</span><span class='past-arrow' id='pastArrowP'>&#9650;</span>";
     const box=document.createElement("div");box.className="past-section";
     [...past].reverse().forEach(g=>{
+      const dh=document.createElement("div");dh.className="day-header";dh.textContent=fmtDate(g.date);box.appendChild(dh);
       const card=buildCard(g,true);
       if(openPanels.has("panel_"+g.id))card.querySelector(".tip-panel").classList.add("open");
       box.appendChild(card);
