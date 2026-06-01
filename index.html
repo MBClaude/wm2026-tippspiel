@@ -664,7 +664,7 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
   <div style="background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:28px;padding:0;overflow:hidden;">
     <div class="table-wrap">
       <table class="sb">
-        <thead><tr><th>Spieler</th><th>Tipps</th><th>Vorrunde</th><th>R32</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th style="color:var(--gold-l)">GESAMT</th></tr></thead>
+        <thead><tr><th>Spieler</th><th>Vorrunde</th><th>R32</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th style="color:var(--gold-l)">GESAMT</th></tr></thead>
         <tbody id="sbBodyTotal"></tbody>
       </table>
     </div>
@@ -1543,7 +1543,7 @@ function renderRangliste(){
     const n=i+1;
     const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
     const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
-    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td><td>"+r.grp+"</td><td>"+r.r32+"</td><td>"+r.af+"</td><td>"+r.qf+"</td><td>"+r.sf+"</td><td>"+r.fin+"</td>"
+    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.grp+"</td><td>"+r.r32+"</td><td>"+r.af+"</td><td>"+r.qf+"</td><td>"+r.sf+"</td><td>"+r.fin+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
 
@@ -1569,7 +1569,7 @@ function renderRangliste(){
     +"<div id='prepRanglisteBody' style='"+bodyDisplay+"'>"
     +"<div style='background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:12px;padding:0;overflow:hidden;'>"
     +"<div class='table-wrap'><table class='sb'>"
-    +"<thead><tr><th>Spieler</th><th>Tipps</th><th style='color:var(--gold-l)'>Testspiele</th></tr></thead>"
+    +"<thead><tr><th>Spieler</th><th>Tipps</th><th style='color:var(--gold-l)'>Punkte</th></tr></thead>"
     +"<tbody>"+prepTableRows+"</tbody>"
     +"</table></div></div></div></div>";
   document.getElementById("prepRanglisteTop").innerHTML=grpStarted?"":prepHtml;
