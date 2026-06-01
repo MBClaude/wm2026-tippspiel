@@ -1301,7 +1301,7 @@ function buildCard(g,isPrep){
 
   let meta="";
   if(isL)meta+="<span class='live-badge'>&#9679; LIVE</span> ";
-  else if(isF)meta+="<span class='done-badge'>&#10003; Abgepfiffen</span> ";
+  else if(isF)meta+="<span class='done-badge'>&#10003; Abgepfiffen</span> <span style='font-family:\"Bebas Neue\",cursive;font-size:1.1rem;color:var(--green-bright);letter-spacing:2px;margin-left:4px'>"+result.home+":"+result.away+"</span>";
   else if(locked)meta+="<span class='locked-badge'>&#128274; Gesperrt</span> ";
 
   const tagHtml=isPrep?"<span class='prep-tag'>DFB-Test &middot; "+(g.loc||"")+"</span>":"<span class='gtag'>Gruppe "+g.group+"</span>";
