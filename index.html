@@ -649,18 +649,20 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
 
 <div id="tab-bracket" style="display:none">
   <div class="bracket-info">
-    <strong>WM 2026 KO-Format:</strong> 48 Teams &rarr; Top 2 jeder Gruppe (24) + 8 beste Drittplatzierte = <strong>32 Teams</strong> &rarr; Runde der 32 &rarr; VF &rarr; HF &rarr; Finale.<br>
-    <strong>Punkte:</strong> Exakt 4P &middot; Differenz 3P &middot; Tendenz 2P &middot; &#128274; Tipps bei Anpfiff gesperrt
+    <strong>WM 2026 KO-Format:</strong> 48 Teams &rarr; Top 2 jeder Gruppe (24) + 8 beste Drittplatzierte = <strong>32 Teams</strong> &rarr; Runde der 32 &rarr; VF &rarr; HF &rarr; Finale.
   </div>
   <div id="bracketSection"><div class="no-player-msg">W&auml;hle deinen <span>Namen</span>.</div></div>
 </div>
 
 <div id="tab-rangliste" style="display:none">
+  <div class="bracket-info" style="margin-bottom:20px">
+    <strong>Punktewertung:</strong> Exakt 4P &middot; Differenz 3P &middot; Tendenz 2P &middot; &#128274; Tipps bei Anpfiff gesperrt
+  </div>
   <div class="sec-title">&#127945; GESAMTRANGLISTE</div>
   <div style="background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:28px;padding:0;overflow:hidden;">
     <div class="table-wrap">
       <table class="sb">
-        <thead><tr><th>Spieler</th><th>Tipps</th><th>Testspiele</th><th>Vorrunde</th><th>R32</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th style="color:var(--gold-l)">GESAMT</th></tr></thead>
+        <thead><tr><th>Spieler</th><th>Tipps</th><th>Vorrunde</th><th>R32</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th style="color:var(--gold-l)">GESAMT</th></tr></thead>
         <tbody id="sbBodyTotal"></tbody>
       </table>
     </div>
@@ -674,6 +676,22 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
   <div class="sec-title" style="margin-top:8px">&#128081; VORRUNDENSIEGER</div>
   <div id="groupWinnerSection">
     <p style="color:var(--tdim);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;letter-spacing:1px">Wird nach Ende der Vorrunde (29. Juni 2026) bekanntgegeben.</p>
+  </div>
+
+  <div id="prepRanglisteSection" style="margin-top:28px">
+    <div class="sec-title" style="cursor:pointer;user-select:none" onclick="togglePrepRangliste()">
+      &#127881; TESTSPIEL-RANGLISTE <span id="prepRanglisteToggle" style="font-size:.8rem;opacity:.6">&#9660;</span>
+    </div>
+    <div id="prepRanglisteBody">
+      <div style="background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:12px;padding:0;overflow:hidden;">
+        <div class="table-wrap">
+          <table class="sb">
+            <thead><tr><th>Spieler</th><th>Tipps</th><th style="color:var(--gold-l)">Testspiele</th></tr></thead>
+            <tbody id="sbBodyPrep"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1528,7 +1546,7 @@ function renderRangliste(){
     const qf=playerPts(p,qfIds);
     const sf=playerPts(p,sfIds);
     const fin=playerPts(p,finIds);
-    const tot=prep+grp+r32+af+qf+sf+fin;
+    const tot=grp+r32+af+qf+sf+fin;
     const tips=Object.keys(allTips).filter(k=>k.startsWith(p+"_")).length;
     return{p,prep,grp,r32,af,qf,sf,fin,tot,tips};
   }).sort((a,b)=>b.tot-a.tot||b.tips-a.tips);
@@ -1537,9 +1555,32 @@ function renderRangliste(){
     const n=i+1;
     const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
     const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
-    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td><td>"+r.prep+"</td><td>"+r.grp+"</td><td>"+r.r32+"</td><td>"+r.af+"</td><td>"+r.qf+"</td><td>"+r.sf+"</td><td>"+r.fin+"</td>"
+    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td><td>"+r.grp+"</td><td>"+r.r32+"</td><td>"+r.af+"</td><td>"+r.qf+"</td><td>"+r.sf+"</td><td>"+r.fin+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
+
+  // Testspiel-Rangliste
+  const prepRows=PLAYERS.map(p=>({
+    p,
+    pts:playerPts(p,prepIds),
+    tips:prepIds.filter(id=>allTips[p+"_"+id]!==undefined).length
+  })).sort((a,b)=>b.pts-a.pts||b.tips-a.tips);
+  document.getElementById("sbBodyPrep").innerHTML=prepRows.map((r,i)=>{
+    const n=i+1;
+    const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
+    const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
+    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td>"
+    +"<td style='color:var(--gold-l);font-weight:700'>"+r.pts+"</td></tr>";
+  }).join("");
+
+  // Auto-collapse Testspiel-Rangliste sobald Vorrunde begonnen hat
+  const grpStarted=isLocked(GAMES[0].date,GAMES[0].time);
+  const body=document.getElementById("prepRanglisteBody");
+  const toggle=document.getElementById("prepRanglisteToggle");
+  if(grpStarted&&body&&!body.dataset.manualOpen){
+    body.style.display="none";
+    if(toggle)toggle.innerHTML="&#9654;";
+  }
 
   const grpWinnerRows=PLAYERS.map(p=>({p,pts:playerPts(p,grpIds)})).sort((a,b)=>b.pts-a.pts);
   const win=grpWinnerRows[0];
@@ -1558,6 +1599,15 @@ function renderRangliste(){
 
 // ── ACTIONS ──
 function togglePanel(id){const p=document.getElementById(id);if(p)p.classList.toggle("open");}
+function togglePrepRangliste(){
+  const body=document.getElementById("prepRanglisteBody");
+  const toggle=document.getElementById("prepRanglisteToggle");
+  if(!body)return;
+  const hidden=body.style.display==="none";
+  body.style.display=hidden?"":"none";
+  if(toggle)toggle.innerHTML=hidden?"&#9660;":"&#9654;";
+  if(hidden)body.dataset.manualOpen="1"; else delete body.dataset.manualOpen;
+}
 
 async function doSave(gid,date,time){
   if(isLocked(date,time)){showToast("&#128274; Tipp gesperrt!","rgba(230,126,34,0.9)");return;}
