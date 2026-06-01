@@ -658,6 +658,8 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
   <div class="bracket-info" style="margin-bottom:20px">
     <strong>Punktewertung:</strong> Exakt 4P &middot; Differenz 3P &middot; Tendenz 2P &middot; &#128274; Tipps bei Anpfiff gesperrt
   </div>
+  <!-- Testspiel-Rangliste kommt hier oben rein solange Vorrunde noch nicht begonnen hat -->
+  <div id="prepRanglisteTop"></div>
   <div class="sec-title">&#127945; GESAMTRANGLISTE</div>
   <div style="background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:28px;padding:0;overflow:hidden;">
     <div class="table-wrap">
@@ -678,22 +680,8 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
     <p style="color:var(--tdim);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;letter-spacing:1px">Wird nach Ende der Vorrunde (29. Juni 2026) bekanntgegeben.</p>
   </div>
 
-  <div id="prepRanglisteSection" style="margin-top:28px">
-    <div class="sec-title" style="cursor:pointer;user-select:none" onclick="togglePrepRangliste()">
-      &#127881; TESTSPIEL-RANGLISTE <span id="prepRanglisteToggle" style="font-size:.8rem;opacity:.6">&#9660;</span>
-    </div>
-    <div id="prepRanglisteBody">
-      <div style="background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:12px;padding:0;overflow:hidden;">
-        <div class="table-wrap">
-          <table class="sb">
-            <thead><tr><th>Spieler</th><th>Tipps</th><th style="color:var(--gold-l)">Testspiele</th></tr></thead>
-            <tbody id="sbBodyPrep"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  <!-- Testspiel-Rangliste kommt hier unten rein sobald Vorrunde begonnen hat -->
+  <div id="prepRanglisteBottom"></div>
 
 </main>
 <!-- ── PLAYER MODAL ── -->
@@ -1559,28 +1547,33 @@ function renderRangliste(){
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
 
-  // Testspiel-Rangliste
+  // Testspiel-Rangliste: oben vor Vorrunde, unten+zugeklappt danach
+  const grpStarted=isLocked(GAMES[0].date,GAMES[0].time);
   const prepRows=PLAYERS.map(p=>({
     p,
     pts:playerPts(p,prepIds),
     tips:prepIds.filter(id=>allTips[p+"_"+id]!==undefined).length
   })).sort((a,b)=>b.pts-a.pts||b.tips-a.tips);
-  document.getElementById("sbBodyPrep").innerHTML=prepRows.map((r,i)=>{
+  const prepTableRows=prepRows.map((r,i)=>{
     const n=i+1;
     const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
     const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
     return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700'>"+r.pts+"</td></tr>";
   }).join("");
-
-  // Auto-collapse Testspiel-Rangliste sobald Vorrunde begonnen hat
-  const grpStarted=isLocked(GAMES[0].date,GAMES[0].time);
-  const body=document.getElementById("prepRanglisteBody");
-  const toggle=document.getElementById("prepRanglisteToggle");
-  if(grpStarted&&body&&!body.dataset.manualOpen){
-    body.style.display="none";
-    if(toggle)toggle.innerHTML="&#9654;";
-  }
+  const collapsed=grpStarted&&!window._prepRanglisteOpen;
+  const toggleIcon=collapsed?"&#9654;":"&#9660;";
+  const bodyDisplay=collapsed?"display:none":"";
+  const prepHtml="<div style='margin-top:28px'>"
+    +"<div class='sec-title' style='cursor:pointer;user-select:none' onclick='togglePrepRangliste()'>&#127881; TESTSPIEL-RANGLISTE <span id='prepRanglisteToggle' style='font-size:.8rem;opacity:.6'>"+toggleIcon+"</span></div>"
+    +"<div id='prepRanglisteBody' style='"+bodyDisplay+"'>"
+    +"<div style='background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:12px;padding:0;overflow:hidden;'>"
+    +"<div class='table-wrap'><table class='sb'>"
+    +"<thead><tr><th>Spieler</th><th>Tipps</th><th style='color:var(--gold-l)'>Testspiele</th></tr></thead>"
+    +"<tbody>"+prepTableRows+"</tbody>"
+    +"</table></div></div></div></div>";
+  document.getElementById("prepRanglisteTop").innerHTML=grpStarted?"":prepHtml;
+  document.getElementById("prepRanglisteBottom").innerHTML=grpStarted?prepHtml:"";
 
   const grpWinnerRows=PLAYERS.map(p=>({p,pts:playerPts(p,grpIds)})).sort((a,b)=>b.pts-a.pts);
   const win=grpWinnerRows[0];
@@ -1606,7 +1599,7 @@ function togglePrepRangliste(){
   const hidden=body.style.display==="none";
   body.style.display=hidden?"":"none";
   if(toggle)toggle.innerHTML=hidden?"&#9660;":"&#9654;";
-  if(hidden)body.dataset.manualOpen="1"; else delete body.dataset.manualOpen;
+  window._prepRanglisteOpen=hidden;
 }
 
 async function doSave(gid,date,time){
