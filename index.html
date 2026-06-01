@@ -1549,6 +1549,7 @@ function renderRangliste(){
 
   // Testspiel-Rangliste: oben vor Vorrunde, unten+zugeklappt danach
   const grpStarted=isLocked(GAMES[0].date,GAMES[0].time);
+  const prepPlayed=prepIds.filter(id=>allResults[id]!==undefined).length;
   const prepRows=PLAYERS.map(p=>({
     p,
     pts:playerPts(p,prepIds),
@@ -1558,7 +1559,7 @@ function renderRangliste(){
     const n=i+1;
     const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
     const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
-    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td>"
+    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td><td>"+prepPlayed+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700'>"+r.pts+"</td></tr>";
   }).join("");
   const collapsed=grpStarted&&!window._prepRanglisteOpen;
@@ -1569,7 +1570,7 @@ function renderRangliste(){
     +"<div id='prepRanglisteBody' style='"+bodyDisplay+"'>"
     +"<div style='background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:12px;padding:0;overflow:hidden;'>"
     +"<div class='table-wrap'><table class='sb'>"
-    +"<thead><tr><th>Spieler</th><th>Tipps</th><th style='color:var(--gold-l)'>Punkte</th></tr></thead>"
+    +"<thead><tr><th>Spieler</th><th>Tipps</th><th>Spiele gespielt</th><th style='color:var(--gold-l)'>Punkte</th></tr></thead>"
     +"<tbody>"+prepTableRows+"</tbody>"
     +"</table></div></div></div></div>";
   document.getElementById("prepRanglisteTop").innerHTML=grpStarted?"":prepHtml;
