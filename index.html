@@ -618,8 +618,8 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
 </div>
 
 <div class="tabs-wrap">
-  <button class="tab-btn active" onclick="switchTab('vorbereitung')">&#127881; DFB-Testspiele</button>
-  <button class="tab-btn" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
+  <button class="tab-btn" onclick="switchTab('vorbereitung')" style="display:none">&#127881; DFB-Testspiele</button>
+  <button class="tab-btn active" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
   <button class="tab-btn" onclick="switchTab('bracket')">&#127942; Turnierbaum</button>
   <button class="tab-btn" onclick="switchTab('rangliste')">&#127945; Rangliste</button>
 </div>
@@ -902,7 +902,7 @@ const ALL_SLOTS={};
 
 // ── STATE ──
 let SB_URL="",SB_KEY="",WC_KEY="",OS_APP_ID="";
-let currentPlayer="",currentFilter="all",currentTab="vorbereitung";
+let currentPlayer="",currentFilter="all",currentTab="vorrunde";
 let allTips={},allResults={},liveData={},koGames={};
 
 // ── CONFIG ──
@@ -1724,7 +1724,7 @@ loadConfig();
   }
 })();
 buildKOBracket();
-switchTab("vorbereitung");
+switchTab("vorrunde");
 renderAll();
 refresh();
 initOneSignal();
