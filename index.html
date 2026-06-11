@@ -1060,39 +1060,45 @@ function checkAllTipped(gid){
 async function fetchLiveResults(){
   setDot("apiDot","orange");setTxt("apiStatus","Lade Live-Ergebnisse...");
   try{
-    const hd=WC_KEY?{"Authorization":"Bearer "+WC_KEY}:{};
-    const res=await fetch("https://api.wc2026api.com/matches?limit=200",{headers:hd});
+    const res=await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard");
     if(!res.ok)throw new Error("HTTP "+res.status);
     const data=await res.json();
-    const matches=Array.isArray(data)?data:(data.matches||data.data||[]);
-    let saved=0;const proms=[];
-    matches.forEach(m=>{
-      const ah=(m.home_team||m.homeTeam||"").toLowerCase();
-      const aa=(m.away_team||m.awayTeam||"").toLowerCase();
-      const st=(m.status||"").toLowerCase();
-      const fin=["finished","ft","complete","closed"].includes(st);
-      const liv=["live","inprogress","1h","2h","ht"].includes(st);
-      const hs=m.home_score??m.homeScore??m.score?.home??null;
-      const as_=m.away_score??m.awayScore??m.score?.away??null;
+    const events=data.events||[];
+    let saved=0,live=0;const proms=[];
+    events.forEach(ev=>{
+      const comp=ev.competitions?.[0];if(!comp)return;
+      const homeC=comp.competitors?.find(c=>c.homeAway==="home");
+      const awayC=comp.competitors?.find(c=>c.homeAway==="away");
+      if(!homeC||!awayC)return;
+      const ah=(homeC.team?.displayName||"").toLowerCase();
+      const aa=(awayC.team?.displayName||"").toLowerCase();
+      const state=comp.status?.type?.state||"";
+      const fin=state==="post";
+      const liv=state==="in";
+      if(liv)live++;
+      const hs=fin||liv?parseInt(homeC.score??-1):null;
+      const as_=fin||liv?parseInt(awayC.score??-1):null;
+      const validScore=hs!==null&&hs>=0&&as_!==null&&as_>=0;
       const allG=[...PREP_GAMES,...GAMES];
       allG.forEach(g=>{
         const gh=g.ah.toLowerCase(),ga=g.aa.toLowerCase();
         if((ah.includes(gh)||gh.includes(ah))&&(aa.includes(ga)||ga.includes(aa))){
-          liveData[g.id]={home:hs!==null?parseInt(hs):null,away:as_!==null?parseInt(as_):null,status:fin?"finished":liv?"live":"scheduled"};
-          if(fin&&hs!==null&&as_!==null&&!allResults[g.id])proms.push(upsertResult(g.id,parseInt(hs),parseInt(as_)).then(()=>saved++));
+          liveData[g.id]={home:validScore?hs:null,away:validScore?as_:null,status:fin?"finished":liv?"live":"scheduled"};
+          if(fin&&validScore&&!allResults[g.id])proms.push(upsertResult(g.id,hs,as_).then(()=>saved++));
         }
       });
       KO_ROUNDS.forEach(r=>r.slots.forEach(slot=>{
         const kg=koGames[slot.id];if(!kg||kg.home==="TBD")return;
         const kh=kg.home.toLowerCase(),ka=kg.away.toLowerCase();
         if((ah.includes(kh)||kh.includes(ah))&&(aa.includes(ka)||ka.includes(aa))){
-          liveData[slot.id]={home:hs!==null?parseInt(hs):null,away:as_!==null?parseInt(as_):null,status:fin?"finished":liv?"live":"scheduled"};
-          if(fin&&hs!==null&&as_!==null&&!allResults[slot.id])proms.push(upsertResult(slot.id,parseInt(hs),parseInt(as_)).then(()=>saved++));
+          liveData[slot.id]={home:validScore?hs:null,away:validScore?as_:null,status:fin?"finished":liv?"live":"scheduled"};
+          if(fin&&validScore&&!allResults[slot.id])proms.push(upsertResult(slot.id,hs,as_).then(()=>saved++));
         }
       }));
     });
     await Promise.all(proms);
-    setDot("apiDot","green");setTxt("apiStatus","Live-API aktiv &#183; "+saved+" neue Ergebnisse");
+    const liveStr=live>0?` &#183; ${live} live`:"";
+    setDot("apiDot","green");setTxt("apiStatus","ESPN Live-API aktiv"+liveStr+(saved?` &#183; ${saved} neu`:""));
     buildKOBracket();
   }catch(e){setDot("apiDot","red");setTxt("apiStatus","Live-API: "+e.message);buildKOBracket();}
 }
