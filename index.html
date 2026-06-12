@@ -1344,11 +1344,11 @@ function buildCard(g,isPrep){
   card.className="game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isPrep?" prep-card":"")+(isGermany?" germany-game":"");
   card.innerHTML=
     "<div class='game-header' onclick='togglePanel(\"panel_"+g.id+"\")'>"
-    +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+ytLink+"</div>"
+    +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+"</div>"
     +"<div class='team-h'><span class='tname'>"+g.home+" "+flagImg(g.ah)+"</span></div>"
     +"<div class='vs-block'>"+center+"<div class='tip-cnt'>"+tipCount(g.id)+" / "+PLAYERS.length+" Tipps</div></div>"
     +"<div class='team-a'><span class='tname'>"+flagImg(g.aa)+" "+g.away+"</span></div>"
-    +"<div class='game-status-col'>"+tb+pp+"</div>"
+    +"<div class='game-status-col'>"+pp+tb+ytLink+"</div>"
     +"</div>"
     +"<div class='tip-panel' id='panel_"+g.id+"'>"
     +tipSec
