@@ -1198,7 +1198,7 @@ setInterval(refresh,2*60*1000);
 
 // ── LEADER BANNER ──
 function renderLeaderBanner(){
-  const allIds=[...PREP_GAMES,...GAMES,...KO_ROUNDS.flatMap(r=>r.slots)].map(g=>g.id);
+  const allIds=[...GAMES,...KO_ROUNDS.flatMap(r=>r.slots)].map(g=>g.id);
   const ranked=PLAYERS.map(p=>({p,pts:playerPts(p,allIds)})).sort((a,b)=>b.pts-a.pts);
   const top=ranked[0];
   const banner=document.getElementById("leaderBanner");
