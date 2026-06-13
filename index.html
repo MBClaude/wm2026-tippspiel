@@ -894,53 +894,108 @@ const GAMES=[
 
 const KO_ROUNDS=[
   {phase:"Runde der 32",phaseKey:"r32",slots:[
-    {id:101,label:"R32-1",date:"2026-06-29",time:"03:00"},{id:102,label:"R32-2",date:"2026-06-29",time:"21:00"},
-    {id:103,label:"R32-3",date:"2026-06-30",time:"00:00"},{id:104,label:"R32-4",date:"2026-06-30",time:"21:00"},
-    {id:105,label:"R32-5",date:"2026-07-01",time:"00:00"},{id:106,label:"R32-6",date:"2026-07-01",time:"04:00"},
-    {id:107,label:"R32-7",date:"2026-07-01",time:"21:00"},{id:108,label:"R32-8",date:"2026-07-02",time:"23:00"},
-    {id:109,label:"R32-9",date:"2026-07-03",time:"02:00"},{id:110,label:"R32-10",date:"2026-07-03",time:"03:00"},
-    {id:111,label:"R32-11",date:"2026-07-03",time:"23:00"},{id:112,label:"R32-12",date:"2026-07-04",time:"03:00"},
-    {id:113,label:"R32-13",date:"2026-07-04",time:"23:00"},{id:114,label:"R32-14",date:"2026-07-04",time:"23:00"},
-    {id:115,label:"R32-15",date:"2026-07-04",time:"03:00"},{id:116,label:"R32-16",date:"2026-07-04",time:"03:00"},
+    // M73–M88 (Wikipedia); Datum/Zeit = MESZ (UTC+2). Wo US-Nacht, überschreitet Datum Mitternacht MESZ.
+    {id:101,label:"R32-1", date:"2026-06-28",time:"21:00"}, // M73: 2A vs 2B  | 12:00 PDT → 21:00 MESZ
+    {id:102,label:"R32-2", date:"2026-06-29",time:"22:30"}, // M74: 1E vs 3rd | 16:30 EDT → 22:30 MESZ
+    {id:103,label:"R32-3", date:"2026-06-30",time:"03:00"}, // M75: 1F vs 2C  | 19:00 MDT → 03:00 MESZ+1
+    {id:104,label:"R32-4", date:"2026-06-29",time:"19:00"}, // M76: 1C vs 2F  | 12:00 CDT → 19:00 MESZ
+    {id:105,label:"R32-5", date:"2026-06-30",time:"23:00"}, // M77: 1I vs 3rd | 17:00 EDT → 23:00 MESZ
+    {id:106,label:"R32-6", date:"2026-06-30",time:"19:00"}, // M78: 2E vs 2I  | 12:00 CDT → 19:00 MESZ
+    {id:107,label:"R32-7", date:"2026-07-01",time:"03:00"}, // M79: 1A vs 3rd | 19:00 MDT → 03:00 MESZ+1
+    {id:108,label:"R32-8", date:"2026-07-01",time:"18:00"}, // M80: 1L vs 3rd | 12:00 EDT → 18:00 MESZ
+    {id:109,label:"R32-9", date:"2026-07-02",time:"02:00"}, // M81: 1D vs 3rd | 17:00 PDT → 02:00 MESZ+1
+    {id:110,label:"R32-10",date:"2026-07-01",time:"22:00"}, // M82: 1G vs 3rd | 13:00 PDT → 22:00 MESZ
+    {id:111,label:"R32-11",date:"2026-07-03",time:"01:00"}, // M83: 2K vs 2L  | 19:00 EDT → 01:00 MESZ+1
+    {id:112,label:"R32-12",date:"2026-07-02",time:"21:00"}, // M84: 1H vs 2J  | 12:00 PDT → 21:00 MESZ
+    {id:113,label:"R32-13",date:"2026-07-03",time:"05:00"}, // M85: 1B vs 3rd | 20:00 PDT → 05:00 MESZ+1
+    {id:114,label:"R32-14",date:"2026-07-04",time:"00:00"}, // M86: 1J vs 2H  | 18:00 EDT → 00:00 MESZ+1
+    {id:115,label:"R32-15",date:"2026-07-04",time:"03:30"}, // M87: 1K vs 3rd | 20:30 CDT → 03:30 MESZ+1
+    {id:116,label:"R32-16",date:"2026-07-03",time:"20:00"}, // M88: 2D vs 2G  | 13:00 CDT → 20:00 MESZ
   ]},
   {phase:"Achtelfinale",phaseKey:"af",slots:[
-    {id:151,label:"AF-1",date:"2026-07-05",time:"21:00"},{id:152,label:"AF-2",date:"2026-07-05",time:"23:00"},
-    {id:153,label:"AF-3",date:"2026-07-06",time:"21:00"},{id:154,label:"AF-4",date:"2026-07-06",time:"23:00"},
-    {id:155,label:"AF-5",date:"2026-07-07",time:"21:00"},{id:156,label:"AF-6",date:"2026-07-07",time:"23:00"},
-    {id:157,label:"AF-7",date:"2026-07-08",time:"21:00"},{id:158,label:"AF-8",date:"2026-07-08",time:"23:00"},
+    // M89–M96 (Wikipedia); Verkettung: 151=M89(W74,W77), 152=M90(W73,W75), usw.
+    {id:151,label:"AF-1",date:"2026-07-04",time:"23:00"}, // M89: W74 vs W77 | 17:00 EDT → 23:00 MESZ
+    {id:152,label:"AF-2",date:"2026-07-04",time:"19:00"}, // M90: W73 vs W75 | 12:00 CDT → 19:00 MESZ
+    {id:153,label:"AF-3",date:"2026-07-05",time:"22:00"}, // M91: W76 vs W78 | 16:00 EDT → 22:00 MESZ
+    {id:154,label:"AF-4",date:"2026-07-06",time:"02:00"}, // M92: W79 vs W80 | 18:00 MDT → 02:00 MESZ+1
+    {id:155,label:"AF-5",date:"2026-07-06",time:"21:00"}, // M93: W83 vs W84 | 14:00 CDT → 21:00 MESZ
+    {id:156,label:"AF-6",date:"2026-07-07",time:"02:00"}, // M94: W81 vs W82 | 17:00 PDT → 02:00 MESZ+1
+    {id:157,label:"AF-7",date:"2026-07-07",time:"18:00"}, // M95: W86 vs W88 | 12:00 EDT → 18:00 MESZ
+    {id:158,label:"AF-8",date:"2026-07-07",time:"22:00"}, // M96: W85 vs W87 | 13:00 PDT → 22:00 MESZ
   ]},
   {phase:"Viertelfinale",phaseKey:"qf",slots:[
-    {id:121,label:"VF-1",date:"2026-07-09",time:"22:00"},{id:122,label:"VF-2",date:"2026-07-10",time:"21:00"},
-    {id:123,label:"VF-3",date:"2026-07-11",time:"23:00"},{id:124,label:"VF-4",date:"2026-07-12",time:"03:00"},
+    // M97–M100; VF-2 und VF-3 waren im alten Code vertauscht — jetzt korrekt.
+    {id:121,label:"VF-1",date:"2026-07-09",time:"22:00"}, // M97:  W89 vs W90 | 16:00 EDT → 22:00 MESZ
+    {id:122,label:"VF-2",date:"2026-07-10",time:"21:00"}, // M98:  W93 vs W94 | 12:00 PDT → 21:00 MESZ
+    {id:123,label:"VF-3",date:"2026-07-11",time:"23:00"}, // M99:  W91 vs W92 | 17:00 EDT → 23:00 MESZ
+    {id:124,label:"VF-4",date:"2026-07-12",time:"03:00"}, // M100: W95 vs W96 | 20:00 CDT → 03:00 MESZ+1
   ]},
   {phase:"Halbfinale",phaseKey:"sf",slots:[
-    {id:131,label:"HF-1",date:"2026-07-14",time:"21:00"},{id:132,label:"HF-2",date:"2026-07-15",time:"21:00"},
+    {id:131,label:"HF-1",date:"2026-07-14",time:"21:00"}, // M101: 14:00 CDT → 21:00 MESZ
+    {id:132,label:"HF-2",date:"2026-07-15",time:"21:00"}, // M102: 15:00 EDT → 21:00 MESZ
   ]},
   {phase:"Platz 3 &amp; Finale",phaseKey:"fin",slots:[
-    {id:141,label:"Platz 3",date:"2026-07-18",time:"23:00"},{id:142,label:"&#127942; FINALE",date:"2026-07-19",time:"21:00"},
+    {id:141,label:"Platz 3",date:"2026-07-18",time:"23:00"},       // M103: 17:00 EDT → 23:00 MESZ
+    {id:142,label:"&#127942; FINALE",date:"2026-07-19",time:"21:00"}, // M104: 15:00 EDT → 21:00 MESZ
   ]},
 ];
 
 // ── SLOT LABELS (Qualifikations-Beschreibung) ──
 const SLOT_LABELS={
-  101:{h:"1. Gruppe A",a:"2. Gruppe C"},  102:{h:"1. Gruppe C",a:"2. Gruppe A"},
-  103:{h:"1. Gruppe B",a:"2. Gruppe D"},  104:{h:"1. Gruppe D",a:"2. Gruppe B"},
-  105:{h:"1. Gruppe E",a:"2. Gruppe G"},  106:{h:"1. Gruppe G",a:"2. Gruppe E"},
-  107:{h:"1. Gruppe F",a:"2. Gruppe H"},  108:{h:"1. Gruppe H",a:"2. Gruppe F"},
-  109:{h:"1. Gruppe I",a:"2. Gruppe K"},  110:{h:"1. Gruppe K",a:"2. Gruppe I"},
-  111:{h:"1. Gruppe J",a:"2. Gruppe L"},  112:{h:"1. Gruppe L",a:"2. Gruppe J"},
-  113:{h:"3. Platz 1",a:"3. Platz 2"},   114:{h:"3. Platz 3",a:"3. Platz 4"},
-  115:{h:"3. Platz 5",a:"3. Platz 6"},   116:{h:"3. Platz 7",a:"3. Platz 8"},
-  151:{h:"Sieger R32-1",a:"Sieger R32-2"},152:{h:"Sieger R32-3",a:"Sieger R32-4"},
-  153:{h:"Sieger R32-5",a:"Sieger R32-6"},154:{h:"Sieger R32-7",a:"Sieger R32-8"},
-  155:{h:"Sieger R32-9",a:"Sieger R32-10"},156:{h:"Sieger R32-11",a:"Sieger R32-12"},
-  157:{h:"Sieger R32-13",a:"Sieger R32-14"},158:{h:"Sieger R32-15",a:"Sieger R32-16"},
-  121:{h:"Sieger AF-1",a:"Sieger AF-2"}, 122:{h:"Sieger AF-3",a:"Sieger AF-4"},
-  123:{h:"Sieger AF-5",a:"Sieger AF-6"}, 124:{h:"Sieger AF-7",a:"Sieger AF-8"},
-  131:{h:"Sieger VF-1",a:"Sieger VF-2"}, 132:{h:"Sieger VF-3",a:"Sieger VF-4"},
+  // R32 — offizielle FIFA-Paarungen (M73–M88)
+  101:{h:"2. Gruppe A",   a:"2. Gruppe B"},     // M73
+  102:{h:"1. Gruppe E",   a:"3. A/B/C/D/F"},    // M74 — 3rd via Annex C
+  103:{h:"1. Gruppe F",   a:"2. Gruppe C"},      // M75
+  104:{h:"1. Gruppe C",   a:"2. Gruppe F"},      // M76
+  105:{h:"1. Gruppe I",   a:"3. C/D/F/G/H"},    // M77 — 3rd via Annex C
+  106:{h:"2. Gruppe E",   a:"2. Gruppe I"},      // M78
+  107:{h:"1. Gruppe A",   a:"3. C/E/F/H/I"},    // M79 — 3rd via Annex C
+  108:{h:"1. Gruppe L",   a:"3. E/H/I/J/K"},    // M80 — 3rd via Annex C
+  109:{h:"1. Gruppe D",   a:"3. B/E/F/I/J"},    // M81 — 3rd via Annex C
+  110:{h:"1. Gruppe G",   a:"3. A/E/H/I/J"},    // M82 — 3rd via Annex C
+  111:{h:"2. Gruppe K",   a:"2. Gruppe L"},      // M83
+  112:{h:"1. Gruppe H",   a:"2. Gruppe J"},      // M84
+  113:{h:"1. Gruppe B",   a:"3. E/F/G/I/J"},    // M85 — 3rd via Annex C
+  114:{h:"1. Gruppe J",   a:"2. Gruppe H"},      // M86
+  115:{h:"1. Gruppe K",   a:"3. D/E/I/J/L"},    // M87 — 3rd via Annex C
+  116:{h:"2. Gruppe D",   a:"2. Gruppe G"},      // M88
+  // AF — offizielle Verkettung (M89–M96)
+  151:{h:"Sieger R32-2",  a:"Sieger R32-5"},    // M89: W74 vs W77
+  152:{h:"Sieger R32-1",  a:"Sieger R32-3"},    // M90: W73 vs W75
+  153:{h:"Sieger R32-4",  a:"Sieger R32-6"},    // M91: W76 vs W78
+  154:{h:"Sieger R32-7",  a:"Sieger R32-8"},    // M92: W79 vs W80
+  155:{h:"Sieger R32-11", a:"Sieger R32-12"},   // M93: W83 vs W84
+  156:{h:"Sieger R32-9",  a:"Sieger R32-10"},   // M94: W81 vs W82
+  157:{h:"Sieger R32-14", a:"Sieger R32-16"},   // M95: W86 vs W88
+  158:{h:"Sieger R32-13", a:"Sieger R32-15"},   // M96: W85 vs W87
+  // VF — offizielle Verkettung (M97–M100); VF-2/VF-3 waren vertauscht
+  121:{h:"Sieger AF-1",   a:"Sieger AF-2"},     // M97:  W89 vs W90
+  122:{h:"Sieger AF-5",   a:"Sieger AF-6"},     // M98:  W93 vs W94
+  123:{h:"Sieger AF-3",   a:"Sieger AF-4"},     // M99:  W91 vs W92
+  124:{h:"Sieger AF-7",   a:"Sieger AF-8"},     // M100: W95 vs W96
+  131:{h:"Sieger VF-1",   a:"Sieger VF-2"},
+  132:{h:"Sieger VF-3",   a:"Sieger VF-4"},
   141:{h:"Verlierer HF-1",a:"Verlierer HF-2"},
-  142:{h:"Sieger HF-1",a:"Sieger HF-2"},
+  142:{h:"Sieger HF-1",   a:"Sieger HF-2"},
 };
+// ── DRITTPLATZIERTE: Manueller Override nach Gruppenphase ──
+// Nach Abschluss der Gruppenphase (ca. 30. Juni) gibt FIFA die offizielle
+// Zuteilung der 8 besten Drittplatzierten auf die R32-Slots bekannt.
+// Dann hier den Gruppenbuchstaben (A–L) des jeweiligen Drittplatzierten eintragen.
+// Nur eingetragene Slots werden mit echten Teamnamen befüllt.
+// Beispiel (wenn z.B. Gruppe C den Slot 102 bekommt):
+//   102: "C",   ← Drittplatzierter aus Gruppe C spielt in M74 (1E vs 3rd)
+const T3_OVERRIDE={
+  // 102: "",  // M74: 1E vs 3rd A/B/C/D/F  — Gruppe eintragen, sobald FIFA bekannt gibt
+  // 105: "",  // M77: 1I vs 3rd C/D/F/G/H
+  // 107: "",  // M79: 1A vs 3rd C/E/F/H/I
+  // 108: "",  // M80: 1L vs 3rd E/H/I/J/K
+  // 109: "",  // M81: 1D vs 3rd B/E/F/I/J
+  // 110: "",  // M82: 1G vs 3rd A/E/H/I/J
+  // 113: "",  // M85: 1B vs 3rd E/F/G/I/J
+  // 115: "",  // M87: 1K vs 3rd D/E/I/J/L
+};
+
 // Slot-Lookup für schnellen Zugriff
 const ALL_SLOTS={};
 // (wird nach KO_ROUNDS-Init befüllt, siehe unten)
@@ -1202,46 +1257,72 @@ function getGroupTable(group){
 }
 function buildKOBracket(){
   const groups=["A","B","C","D","E","F","G","H","I","J","K","L"];
-  const gW={},gS={},thirds=[];
+  const gW={},gS={},thirdsByGroup={};
   groups.forEach(g=>{
     const gGames=GAMES.filter(x=>x.group===g);
-    const allDone=gGames.length>0&&gGames.every(x=>allResults[x.id]);
-    if(!allDone)return; // Nur wenn Gruppe fertig gespielt
+    if(!gGames.length||!gGames.every(x=>allResults[x.id]))return;
     const t=getGroupTable(g);
     if(t[0])gW[g]={name:t[0].name};
     if(t[1])gS[g]={name:t[1].name};
-    if(t[2])thirds.push({name:t[2].name,pts:t[2].pts,gd:t[2].gd});
+    if(t[2])thirdsByGroup[g]={name:t[2].name};
   });
-  thirds.sort((a,b)=>b.pts-a.pts||b.gd-a.gd);
-  const best8=thirds.slice(0,8);
+  // t3name: Teamname aus T3_OVERRIDE, sobald Admin den Gruppenbuchstaben einträgt.
+  // Solange leer → "TBD" → UI zeigt SLOT_LABELS-Platzhalter ("3. A/B/C/D/F").
+  const t3name=sid=>{
+    const g=T3_OVERRIDE[sid];
+    if(g&&thirdsByGroup[g])return thirdsByGroup[g].name;
+    return"TBD";
+  };
   const w=g=>gW[g]?gW[g].name:"TBD";
   const s=g=>gS[g]?gS[g].name:"TBD";
-  const t3=i=>best8[i]?best8[i].name:"TBD";
-  // R32
+  // ── R32 — offizielle FIFA-Paarungen M73–M88 ──
   koGames={
-    101:{home:w("A"),away:s("C")},102:{home:w("C"),away:s("A")},
-    103:{home:w("B"),away:s("D")},104:{home:w("D"),away:s("B")},
-    105:{home:w("E"),away:s("G")},106:{home:w("G"),away:s("E")},
-    107:{home:w("F"),away:s("H")},108:{home:w("H"),away:s("F")},
-    109:{home:w("I"),away:s("K")},110:{home:w("K"),away:s("I")},
-    111:{home:w("J"),away:s("L")},112:{home:w("L"),away:s("J")},
-    113:{home:t3(0),away:t3(1)},114:{home:t3(2),away:t3(3)},
-    115:{home:t3(4),away:t3(5)},116:{home:t3(6),away:t3(7)},
+    101:{home:s("A"),away:s("B")},        // M73: 2A vs 2B
+    102:{home:w("E"),away:t3name(102)},    // M74: 1E vs 3rd
+    103:{home:w("F"),away:s("C")},         // M75: 1F vs 2C
+    104:{home:w("C"),away:s("F")},         // M76: 1C vs 2F
+    105:{home:w("I"),away:t3name(105)},    // M77: 1I vs 3rd
+    106:{home:s("E"),away:s("I")},         // M78: 2E vs 2I
+    107:{home:w("A"),away:t3name(107)},    // M79: 1A vs 3rd
+    108:{home:w("L"),away:t3name(108)},    // M80: 1L vs 3rd
+    109:{home:w("D"),away:t3name(109)},    // M81: 1D vs 3rd
+    110:{home:w("G"),away:t3name(110)},    // M82: 1G vs 3rd
+    111:{home:s("K"),away:s("L")},         // M83: 2K vs 2L
+    112:{home:w("H"),away:s("J")},         // M84: 1H vs 2J
+    113:{home:w("B"),away:t3name(113)},    // M85: 1B vs 3rd
+    114:{home:w("J"),away:s("H")},         // M86: 1J vs 2H
+    115:{home:w("K"),away:t3name(115)},    // M87: 1K vs 3rd
+    116:{home:s("D"),away:s("G")},         // M88: 2D vs 2G
   };
-  function winner(id){const r=allResults[id];const kg=koGames[id];if(!r||!kg||kg.home==="TBD")return"TBD";return r.home>r.away?kg.home:r.home<r.away?kg.away:"TBD";}
-  function loser(id){const r=allResults[id];const kg=koGames[id];if(!r||!kg||kg.home==="TBD")return"TBD";return r.home<r.away?kg.home:r.home>r.away?kg.away:"TBD";}
-  // Achtelfinale — Sieger der R32-Paare
-  koGames[151]={home:winner(101),away:winner(102)};koGames[152]={home:winner(103),away:winner(104)};
-  koGames[153]={home:winner(105),away:winner(106)};koGames[154]={home:winner(107),away:winner(108)};
-  koGames[155]={home:winner(109),away:winner(110)};koGames[156]={home:winner(111),away:winner(112)};
-  koGames[157]={home:winner(113),away:winner(114)};koGames[158]={home:winner(115),away:winner(116)};
-  // Viertelfinale — Sieger der AF-Paare
-  koGames[121]={home:winner(151),away:winner(152)};koGames[122]={home:winner(153),away:winner(154)};
-  koGames[123]={home:winner(155),away:winner(156)};koGames[124]={home:winner(157),away:winner(158)};
-  // Halbfinale
-  koGames[131]={home:winner(121),away:winner(122)};koGames[132]={home:winner(123),away:winner(124)};
-  // Platz 3 + Finale
-  koGames[141]={home:loser(131),away:loser(132)};koGames[142]={home:winner(131),away:winner(132)};
+  function winner(id){
+    const r=allResults[id];const kg=koGames[id];
+    if(!r||!kg||kg.home==="TBD"||kg.away==="TBD")return"TBD";
+    return r.home>r.away?kg.home:r.home<r.away?kg.away:"TBD";
+  }
+  function loser(id){
+    const r=allResults[id];const kg=koGames[id];
+    if(!r||!kg||kg.home==="TBD"||kg.away==="TBD")return"TBD";
+    return r.home<r.away?kg.home:r.home>r.away?kg.away:"TBD";
+  }
+  // ── AF — offizielle Verkettung M89–M96 ──
+  koGames[151]={home:winner(102),away:winner(105)};  // M89: W74 vs W77
+  koGames[152]={home:winner(101),away:winner(103)};  // M90: W73 vs W75
+  koGames[153]={home:winner(104),away:winner(106)};  // M91: W76 vs W78
+  koGames[154]={home:winner(107),away:winner(108)};  // M92: W79 vs W80
+  koGames[155]={home:winner(111),away:winner(112)};  // M93: W83 vs W84
+  koGames[156]={home:winner(109),away:winner(110)};  // M94: W81 vs W82
+  koGames[157]={home:winner(114),away:winner(116)};  // M95: W86 vs W88
+  koGames[158]={home:winner(113),away:winner(115)};  // M96: W85 vs W87
+  // ── VF — offizielle Verkettung M97–M100 ──
+  koGames[121]={home:winner(151),away:winner(152)};  // M97:  W89 vs W90
+  koGames[122]={home:winner(155),away:winner(156)};  // M98:  W93 vs W94
+  koGames[123]={home:winner(153),away:winner(154)};  // M99:  W91 vs W92
+  koGames[124]={home:winner(157),away:winner(158)};  // M100: W95 vs W96
+  // ── HF / Platz 3 / Finale ──
+  koGames[131]={home:winner(121),away:winner(122)};
+  koGames[132]={home:winner(123),away:winner(124)};
+  koGames[141]={home:loser(131), away:loser(132)};
+  koGames[142]={home:winner(131),away:winner(132)};
 }
 
 // ── LOCK ──
