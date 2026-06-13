@@ -693,7 +693,7 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
   <div style="background:rgba(15,74,26,0.65);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;margin-bottom:28px;padding:0;overflow:hidden;">
     <div class="table-wrap">
       <table class="sb">
-        <thead><tr><th>Spieler</th><th>Vorrunde</th><th>R32</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th style="color:var(--gold-l)">GESAMT</th></tr></thead>
+        <thead><tr id="sbHeadTotal"><th>Spieler</th><th>Vorrunde</th><th>R32</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th style="color:var(--gold-l)">GESAMT</th></tr></thead>
         <tbody id="sbBodyTotal"></tbody>
       </table>
     </div>
@@ -1236,6 +1236,11 @@ function isLocked(dateStr,timeStr){
   const ko=new Date(dateStr+"T"+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":00+02:00");
   return Date.now()>=ko.getTime();
 }
+function isPast(dateStr,timeStr){
+  const [h,m]=timeStr.split(":").map(Number);
+  const ko=new Date(dateStr+"T"+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":00+02:00");
+  return Date.now()>=ko.getTime()+12*60*60*1000;
+}
 
 // ── SCORING ──
 function calcPts(tip,result){
@@ -1275,8 +1280,8 @@ function competitionRank(sorted){
     return{...r,rank};
   });
 }
-function rankBadge(rank){
-  if(rank<=3)return"<span style='display:inline-block;margin-right:6px;font-size:1rem;line-height:1'>"+MEDALS[rank]+"</span>";
+function rankBadge(rank,pts){
+  if(rank<=3&&pts>0)return"<span style='display:inline-block;margin-right:6px;font-size:1rem;line-height:1'>"+MEDALS[rank]+"</span>";
   return"<span style='display:inline-block;width:26px;text-align:center;margin-right:6px;color:var(--text-dim);font-family:\"Barlow Condensed\",sans-serif;font-size:.85rem;font-weight:700'>"+rank+"</span>";
 }
 
@@ -1455,9 +1460,8 @@ function renderGames(){
   const openPanels=new Set([...sec.querySelectorAll(".tip-panel.open")].map(e=>e.id));
   sec.querySelectorAll(".day-group,.past-toggle,.past-section").forEach(e=>e.remove());
   let games=currentFilter==="all"?GAMES:GAMES.filter(g=>g.group===currentFilter);
-  const today=new Date().toISOString().slice(0,10);
-  const future=games.filter(g=>g.date>=today);
-  const past=games.filter(g=>g.date<today);
+  const future=games.filter(g=>!isPast(g.date,g.time));
+  const past=games.filter(g=>isPast(g.date,g.time));
 
   const byDate={};future.forEach(g=>{if(!byDate[g.date])byDate[g.date]=[];byDate[g.date].push(g);});
   Object.keys(byDate).sort().forEach(date=>{
@@ -1495,9 +1499,8 @@ function renderPrepGames(){
   if(!currentPlayer){sec.innerHTML="<div class='no-player-msg'>W&auml;hle deinen <span>Namen</span>.</div>";return;}
   const openPanels=new Set([...sec.querySelectorAll(".tip-panel.open")].map(e=>e.id));
   sec.innerHTML="";
-  const today=new Date().toISOString().slice(0,10);
-  const future=PREP_GAMES.filter(g=>g.date>=today);
-  const past=PREP_GAMES.filter(g=>g.date<today);
+  const future=PREP_GAMES.filter(g=>!isPast(g.date,g.time));
+  const past=PREP_GAMES.filter(g=>isPast(g.date,g.time));
   future.forEach(g=>{
     const dh=document.createElement("div");dh.className="day-header";dh.textContent=fmtDate(g.date);
     sec.appendChild(dh);
@@ -1635,10 +1638,22 @@ function renderRangliste(){
     return{p,prep,grp,r32,af,qf,sf,fin,tot,tips};
   }).sort((a,b)=>b.tot-a.tot||b.tips-a.tips);
 
+  const koCols=[
+    {key:"r32",label:"R32",   ids:KO_ROUNDS[0].slots.map(s=>s.id)},
+    {key:"af", label:"AF",    ids:KO_ROUNDS[1].slots.map(s=>s.id)},
+    {key:"qf", label:"VF",    ids:KO_ROUNDS[2].slots.map(s=>s.id)},
+    {key:"sf", label:"HF",    ids:KO_ROUNDS[3].slots.map(s=>s.id)},
+    {key:"fin",label:"Finale",ids:KO_ROUNDS[4].slots.map(s=>s.id)},
+  ].filter(c=>c.ids.some(id=>allResults[id]));
+  document.getElementById("sbHeadTotal").innerHTML=
+    "<th>Spieler</th><th>Vorrunde</th>"
+    +koCols.map(c=>"<th>"+c.label+"</th>").join("")
+    +"<th style='color:var(--gold-l)'>GESAMT</th>";
   document.getElementById("sbBodyTotal").innerHTML=competitionRank(rows).map(r=>{
     const bold=r.p===currentPlayer?"color:var(--green-bright)":"";
-    const nameEl="<span class='prof-name-link' style='"+bold+"' onclick='showProfileModal(\""+r.p+"\")'>"+rankBadge(r.rank)+r.p+"</span>";
-    return"<tr><td>"+nameEl+"</td><td>"+r.grp+"</td><td>"+r.r32+"</td><td>"+r.af+"</td><td>"+r.qf+"</td><td>"+r.sf+"</td><td>"+r.fin+"</td>"
+    const nameEl="<span class='prof-name-link' style='"+bold+"' onclick='showProfileModal(\""+r.p+"\")'>"+rankBadge(r.rank,r.tot)+r.p+"</span>";
+    return"<tr><td>"+nameEl+"</td><td>"+r.grp+"</td>"
+    +koCols.map(c=>"<td>"+r[c.key]+"</td>").join("")
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
 
@@ -1652,7 +1667,7 @@ function renderRangliste(){
   })).sort((a,b)=>b.pts-a.pts||b.tips-a.tips);
   const prepTableRows=competitionRank(prepRows).map(r=>{
     const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
-    return"<tr><td "+bold+">"+rankBadge(r.rank)+r.p+"</td><td>"+r.tips+"</td><td>"+prepPlayed+"</td>"
+    return"<tr><td "+bold+">"+rankBadge(r.rank,r.pts)+r.p+"</td><td>"+r.tips+"</td><td>"+prepPlayed+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700'>"+r.pts+"</td></tr>";
   }).join("");
   const collapsed=grpStarted&&!window._prepRanglisteOpen;
