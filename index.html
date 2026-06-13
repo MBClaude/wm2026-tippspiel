@@ -1273,10 +1273,10 @@ setInterval(refresh,2*60*1000);
 
 // ── RANKING HELPERS ──
 const MEDALS=["","🥇","🥈","🥉"];
-function competitionRank(sorted){
+function competitionRank(sorted,key='pts'){
   let rank=1;
   return sorted.map((r,i,a)=>{
-    if(i>0&&r.pts<a[i-1].pts)rank=i+1;
+    if(i>0&&r[key]<a[i-1][key])rank=i+1;
     return{...r,rank};
   });
 }
@@ -1645,14 +1645,17 @@ function renderRangliste(){
     {key:"sf", label:"HF",    ids:KO_ROUNDS[3].slots.map(s=>s.id)},
     {key:"fin",label:"Finale",ids:KO_ROUNDS[4].slots.map(s=>s.id)},
   ].filter(c=>c.ids.some(id=>allResults[id]));
+  const showGrp=koCols.length>0;
   document.getElementById("sbHeadTotal").innerHTML=
-    "<th>Spieler</th><th>Vorrunde</th>"
+    "<th>Spieler</th>"
+    +(showGrp?"<th>Vorrunde</th>":"")
     +koCols.map(c=>"<th>"+c.label+"</th>").join("")
     +"<th style='color:var(--gold-l)'>GESAMT</th>";
-  document.getElementById("sbBodyTotal").innerHTML=competitionRank(rows).map(r=>{
+  document.getElementById("sbBodyTotal").innerHTML=competitionRank(rows,'tot').map(r=>{
     const bold=r.p===currentPlayer?"color:var(--green-bright)":"";
     const nameEl="<span class='prof-name-link' style='"+bold+"' onclick='showProfileModal(\""+r.p+"\")'>"+rankBadge(r.rank,r.tot)+r.p+"</span>";
-    return"<tr><td>"+nameEl+"</td><td>"+r.grp+"</td>"
+    return"<tr><td>"+nameEl+"</td>"
+    +(showGrp?"<td>"+r.grp+"</td>":"")
     +koCols.map(c=>"<td>"+r[c.key]+"</td>").join("")
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
