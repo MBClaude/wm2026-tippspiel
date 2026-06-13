@@ -173,7 +173,13 @@ main{max-width:1600px;margin:0 auto;padding:24px 28px 80px;}
 
 /* ── LEADER BANNER ── */
 .leader-banner{max-width:1600px;margin:10px auto 0;padding:0 28px;}
-.leader-box{background:linear-gradient(90deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);border-radius:var(--rs);padding:9px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.leader-box{background:linear-gradient(90deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border:1px solid rgba(212,175,55,0.4);border-radius:var(--rs);padding:9px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.lb-row{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:.88rem;letter-spacing:1px;}
+.lb-row:not(:last-child)::after{content:'·';color:rgba(212,175,55,0.4);margin-left:10px;}
+.lb-medal{font-size:1.1rem;line-height:1;}
+.lb-names{color:var(--gold);font-weight:700;}
+.lb-pts-val{color:var(--tmid);}
+/* kept for backward compat */
 .leader-box .lb-crown{font-size:1.2rem;}
 .leader-box .lb-text{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--tmid);flex:1;}
 .leader-box .lb-name{color:var(--gold);font-weight:700;font-size:1rem;}
@@ -650,7 +656,7 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
 <main>
 
 <div id="tab-vorrunde">
-  <div class="filters-wrap">
+  <div class="filters-wrap" style="display:none">
     <span class="filter-label">Gruppe:</span>
     <button class="filter-btn active" data-f="all">Alle</button>
     <button class="filter-btn" data-f="A">A</button><button class="filter-btn" data-f="B">B</button>
@@ -1260,15 +1266,35 @@ async function refresh(){
 }
 setInterval(refresh,2*60*1000);
 
+// ── RANKING HELPERS ──
+const MEDALS=["","🥇","🥈","🥉"];
+function competitionRank(sorted){
+  let rank=1;
+  return sorted.map((r,i,a)=>{
+    if(i>0&&r.pts<a[i-1].pts)rank=i+1;
+    return{...r,rank};
+  });
+}
+function rankBadge(rank){
+  if(rank<=3)return"<span style='display:inline-block;margin-right:6px;font-size:1rem;line-height:1'>"+MEDALS[rank]+"</span>";
+  return"<span style='display:inline-block;width:26px;text-align:center;margin-right:6px;color:var(--text-dim);font-family:\"Barlow Condensed\",sans-serif;font-size:.85rem;font-weight:700'>"+rank+"</span>";
+}
+
 // ── LEADER BANNER ──
 function renderLeaderBanner(){
   const allIds=[...GAMES,...KO_ROUNDS.flatMap(r=>r.slots)].map(g=>g.id);
-  const ranked=PLAYERS.map(p=>({p,pts:playerPts(p,allIds)})).sort((a,b)=>b.pts-a.pts);
-  const top=ranked[0];
+  const sorted=PLAYERS.map(p=>({p,pts:playerPts(p,allIds)})).sort((a,b)=>b.pts-a.pts);
   const banner=document.getElementById("leaderBanner");
-  if(!top||top.pts===0){banner.style.display="none";return;}
-  document.getElementById("leaderName").textContent=top.p;
-  document.getElementById("leaderPts").textContent=top.pts+" Punkte";
+  if(!sorted[0]||sorted[0].pts===0){banner.style.display="none";return;}
+  const ranked=competitionRank(sorted).filter(r=>r.rank<=3);
+  const byRank={};
+  ranked.forEach(r=>{(byRank[r.rank]=byRank[r.rank]||[]).push(r.p);});
+  const html=Object.entries(byRank).map(([rank,names])=>
+    "<span class='lb-row'><span class='lb-medal'>"+MEDALS[rank]+"</span>"
+    +"<span class='lb-names'>"+names.join(" &amp; ")+"</span>"
+    +"<span class='lb-pts-val'>&nbsp;"+sorted.find(s=>s.p===names[0]).pts+" Pkt</span></span>"
+  ).join("");
+  document.querySelector("#leaderBanner .leader-box").innerHTML=html;
   banner.style.display="block";
 }
 
@@ -1609,11 +1635,9 @@ function renderRangliste(){
     return{p,prep,grp,r32,af,qf,sf,fin,tot,tips};
   }).sort((a,b)=>b.tot-a.tot||b.tips-a.tips);
 
-  document.getElementById("sbBodyTotal").innerHTML=rows.map((r,i)=>{
-    const n=i+1;
-    const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
+  document.getElementById("sbBodyTotal").innerHTML=competitionRank(rows).map(r=>{
     const bold=r.p===currentPlayer?"color:var(--green-bright)":"";
-    const nameEl="<span class='prof-name-link' style='"+bold+"' onclick='showProfileModal(\""+r.p+"\")'>"+badge+r.p+"</span>";
+    const nameEl="<span class='prof-name-link' style='"+bold+"' onclick='showProfileModal(\""+r.p+"\")'>"+rankBadge(r.rank)+r.p+"</span>";
     return"<tr><td>"+nameEl+"</td><td>"+r.grp+"</td><td>"+r.r32+"</td><td>"+r.af+"</td><td>"+r.qf+"</td><td>"+r.sf+"</td><td>"+r.fin+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
@@ -1626,11 +1650,9 @@ function renderRangliste(){
     pts:playerPts(p,prepIds),
     tips:prepIds.filter(id=>allTips[p+"_"+id]!==undefined).length
   })).sort((a,b)=>b.pts-a.pts||b.tips-a.tips);
-  const prepTableRows=prepRows.map((r,i)=>{
-    const n=i+1;
-    const badge=n<=3?"<span class='rb rb"+n+"'>"+n+"</span>":"<span style='display:inline-block;width:24px;text-align:center;margin-right:8px;color:var(--text-dim)'>"+n+"</span>";
+  const prepTableRows=competitionRank(prepRows).map(r=>{
     const bold=r.p===currentPlayer?"style='color:var(--green-bright)'":'';
-    return"<tr><td "+bold+">"+badge+r.p+"</td><td>"+r.tips+"</td><td>"+prepPlayed+"</td>"
+    return"<tr><td "+bold+">"+rankBadge(r.rank)+r.p+"</td><td>"+r.tips+"</td><td>"+prepPlayed+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700'>"+r.pts+"</td></tr>";
   }).join("");
   const collapsed=grpStarted&&!window._prepRanglisteOpen;
