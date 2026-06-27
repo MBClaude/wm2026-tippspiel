@@ -1422,6 +1422,40 @@ function updateCountdown(){
   el.textContent="⏱ "+next.name+" · "+timeStr;
 }
 
+// ── TOURNAMENT EVENTS ──
+function eventSeen(key){return!!localStorage.getItem("wm26_ev_"+key);}
+function markEventSeen(key){localStorage.setItem("wm26_ev_"+key,"1");}
+function allGroupGamesDone(){return GAMES.every(g=>!!allResults[g.id]);}
+
+function checkEventNewPairings(){
+  if(!currentPlayer)return;
+  const allKOIds=KO_ROUNDS.flatMap(r=>r.slots.map(s=>s.id));
+  const confirmed=allKOIds.filter(id=>{
+    const kg=koGames[id];return kg&&kg.home!=="TBD"&&kg.away!=="TBD";
+  });
+  // First call of this session: mark all current pairings as seen, no toast (flood protection)
+  if(!window._pairingsInitialized){
+    window._pairingsInitialized=true;
+    confirmed.forEach(id=>markEventSeen("pair_"+id));
+    return;
+  }
+  // Subsequent calls: find newly confirmed pairings not yet seen
+  const newIds=confirmed.filter(id=>!eventSeen("pair_"+id));
+  if(!newIds.length)return;
+  newIds.forEach(id=>markEventSeen("pair_"+id));
+  if(newIds.length===1){
+    const kg=koGames[newIds[0]];
+    showToast("&#9917; Neue Paarung: "+kg.home+" vs "+kg.away,"rgba(52,152,219,0.92)");
+  }else{
+    showToast("&#9917; "+newIds.length+" neue KO-Paarungen best&auml;tigt","rgba(52,152,219,0.92)");
+  }
+}
+
+function checkTournamentEvents(){
+  checkEventNewPairings();
+  // Schritt 3–4 folgen: checkEventGroupFinished(), checkEventKOStarted(), checkEventChampion()
+}
+
 // ── LOCK ──
 function isLocked(dateStr,timeStr){
   const [h,m]=timeStr.split(":").map(Number);
@@ -1461,6 +1495,7 @@ async function refresh(){
   await fetchLiveResults();
   renderAll();
   updateCountdown();
+  checkTournamentEvents();
 }
 setInterval(refresh,2*60*1000);
 setInterval(updateCountdown,30*1000);
