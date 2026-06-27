@@ -348,8 +348,18 @@ body.theme-sand .bk-mc.bk-germany{background:linear-gradient(135deg,rgba(255,255
 /* ── PAST GAMES COLLAPSE ── */
 .past-toggle{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--tdim);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;cursor:pointer;text-align:left;margin-top:8px;margin-bottom:4px;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
 .past-toggle:hover{background:rgba(255,255,255,0.1);color:var(--text);}
-.past-section{display:none;}.past-section.open{display:block;}
+.past-section{max-height:0;overflow:hidden;transition:max-height .38s ease;}.past-section.open{max-height:12000px;}
+.ko-round-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}.ko-round-body.open{max-height:6000px;}
 .past-arrow{transition:transform .2s;}.past-arrow.open{transform:rotate(180deg);}
+/* A2: today highlight */
+.game-card.today-game{border-color:rgba(212,175,55,0.45);box-shadow:0 0 18px rgba(212,175,55,0.10),var(--sh);}
+/* A3: KO winner/loser */
+.ko-winner .tname{color:var(--bright);font-weight:700;}
+.ko-loser{opacity:0.42;}
+.bk-winner{color:var(--bright)!important;}
+.bk-loser{opacity:0.42;}
+/* A1: countdown */
+.countdown-txt{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--gold-l);white-space:nowrap;}
 .vs-block{text-align:center;}
 .vs-txt{font-family:'Bebas Neue',cursive;font-size:1.4rem;color:rgba(255,255,255,0.4);letter-spacing:2px;}
 .score-big{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:3px;}
@@ -627,6 +637,7 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
   <div class="dot" id="dbDot"></div><span class="status-text" id="dbStatus">Initialisiere&hellip;</span>
   <div class="dot" id="apiDot" style="margin-left:14px"></div><span class="status-text" id="apiStatus">Live-API&hellip;</span>
   <button class="btn-sm" onclick="refresh()">&#8635; Aktualisieren</button>
+  <span class="countdown-txt" id="countdown"></span>
   <span class="last-update" id="lastUpdate"></span>
 </div>
 
@@ -1386,6 +1397,31 @@ function buildKOBracket(){
   koGames[142]=ep(142)||{home:winner(131),away:winner(132)};
 }
 
+// ── DATE HELPERS ──
+function isTodayGame(dateStr){
+  const now=Date.now();
+  return now>=new Date(dateStr+"T00:00:00+02:00").getTime()&&now<new Date(dateStr+"T24:00:00+02:00").getTime();
+}
+
+function updateCountdown(){
+  const el=document.getElementById("countdown");if(!el)return;
+  const now=Date.now();
+  const allSlots=[
+    ...GAMES.map(g=>({name:g.home+" – "+g.away,ms:new Date(g.date+"T"+g.time+":00+02:00").getTime()})),
+    ...KO_ROUNDS.flatMap(r=>r.slots.map(s=>{
+      const kg=koGames[s.id];
+      const name=(kg&&kg.home!=="TBD"&&kg.away!=="TBD")?kg.home+" – "+kg.away:s.label;
+      return{name,ms:new Date(s.date+"T"+s.time+":00+02:00").getTime()};
+    }))
+  ];
+  const next=allSlots.filter(s=>s.ms>now).sort((a,b)=>a.ms-b.ms)[0];
+  if(!next){el.textContent="Turnier abgeschlossen";return;}
+  const diff=next.ms-now;
+  const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
+  const timeStr=h>23?"in "+(Math.floor(h/24))+"d "+(h%24)+"h":h>0?"in "+h+"h "+m+"m":"in "+m+"m";
+  el.textContent="⏱ "+next.name+" · "+timeStr;
+}
+
 // ── LOCK ──
 function isLocked(dateStr,timeStr){
   const [h,m]=timeStr.split(":").map(Number);
@@ -1424,8 +1460,10 @@ async function refresh(){
   }
   await fetchLiveResults();
   renderAll();
+  updateCountdown();
 }
 setInterval(refresh,2*60*1000);
+setInterval(updateCountdown,30*1000);
 
 // ── RANKING HELPERS ──
 const MEDALS=["","🥇","🥈","🥉"];
@@ -1592,7 +1630,7 @@ function buildCard(g,isPrep){
 
   const card=document.createElement("div");
   const isGermany=g.ah==="Germany"||g.aa==="Germany";
-  card.className="game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isPrep?" prep-card":"")+(isGermany?" germany-game":"");
+  card.className="game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isPrep?" prep-card":"")+(isGermany?" germany-game":"")+(isTodayGame(g.date)&&!isF?" today-game":"");
   card.innerHTML=
     "<div class='game-header' onclick='togglePanel(\"panel_"+g.id+"\")'>"
     +"<div class='game-meta'><span class='gtime'>"+g.time+" Uhr</span>"+tagHtml+meta+sl+"</div>"
@@ -1705,11 +1743,12 @@ function bkCard(slotId){
     if(isF)scoreH="<div class='bk-score'>"+result.home+":"+result.away+"</div>";
     else if(isL&&liveData[slotId].home!==null)scoreH="<div class='bk-score' style='color:var(--red)'>"+liveData[slotId].home+":"+liveData[slotId].away+"</div>";
     else scoreH="<div class='bk-vs'>vs</div>";
+    const hwins=result&&result.home>result.away,awins=result&&result.away>result.home;
     const homeDisp=homeKnown
-      ?"<div class='bk-team'>"+koFlagImg(kg.home,16)+" "+kg.home+"</div>"
+      ?"<div class='bk-team"+(hwins?" bk-winner":awins?" bk-loser":"")+"'>"+koFlagImg(kg.home,16)+" "+kg.home+"</div>"
       :"<div class='bk-tbd' style='font-size:.72rem'>"+(lbl?lbl.h:"?")+"</div>";
     const awayDisp=awayKnown
-      ?"<div class='bk-team'>"+koFlagImg(kg.away,16)+" "+kg.away+"</div>"
+      ?"<div class='bk-team"+(awins?" bk-winner":hwins?" bk-loser":"")+"'>"+koFlagImg(kg.away,16)+" "+kg.away+"</div>"
       :"<div class='bk-tbd' style='font-size:.72rem'>"+(lbl?lbl.a:"?")+"</div>";
     body=homeDisp+scoreH+awayDisp;
   }
@@ -1809,13 +1848,7 @@ function buildKOCard(slot){
     +(statusBadge?"<span>"+statusBadge+"</span>":"")
     +"</div>";
 
-  // Team columns — show known teams with flags, placeholders for unknown
-  const teamH=homeKnown
-    ?"<div class='team-h'><span class='tname'>"+kg.home+" "+koFlagImg(kg.home)+"</span></div>"
-    :"<div class='team-h'><span class='tname' style='color:var(--tdim);font-size:.82rem;font-weight:400'>"+(lbl?lbl.h:"noch offen")+"</span></div>";
-  const teamA=awayKnown
-    ?"<div class='team-a'><span class='tname'>"+koFlagImg(kg.away)+" "+kg.away+"</span></div>"
-    :"<div class='team-a'><span class='tname' style='color:var(--tdim);font-size:.82rem;font-weight:400'>"+(lbl?lbl.a:"noch offen")+"</span></div>";
+  // Team columns built below with winner/loser classes
 
   // Center: score or VS
   let center;
@@ -1857,11 +1890,17 @@ function buildKOCard(slot){
   }).join("");
 
   const isGermany=(homeKnown&&kg.home==="Deutschland")||(awayKnown&&kg.away==="Deutschland");
-  return "<div class='game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isGermany?" germany-game":"")+"'>"
+  const homeWins=isF&&result.home>result.away;
+  const awayWins=isF&&result.away>result.home;
+  const tH=homeKnown?"<div class='team-h"+(homeWins?" ko-winner":awayWins?" ko-loser":"")+"'><span class='tname'>"+kg.home+" "+koFlagImg(kg.home)+"</span></div>"
+    :"<div class='team-h'><span class='tname' style='color:var(--tdim);font-size:.82rem;font-weight:400'>"+(lbl?lbl.h:"noch offen")+"</span></div>";
+  const tA=awayKnown?"<div class='team-a"+(awayWins?" ko-winner":homeWins?" ko-loser":"")+"'><span class='tname'>"+koFlagImg(kg.away)+" "+kg.away+"</span></div>"
+    :"<div class='team-a'><span class='tname' style='color:var(--tdim);font-size:.82rem;font-weight:400'>"+(lbl?lbl.a:"noch offen")+"</span></div>";
+  return "<div class='game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isGermany?" germany-game":"")+(isTodayGame(slot.date)&&!isF?" today-game":"")+"'>"
     +"<div class='game-header' onclick='togglePanel(\"kopanel_"+id+"\")'>"
-    +gameMeta+teamH
+    +gameMeta+tH
     +"<div class='vs-block'>"+center+"<div class='tip-cnt'>"+tCount+" / "+PLAYERS.length+" Tipps</div></div>"
-    +teamA+statusCol
+    +tA+statusCol
     +"</div>"
     +"<div class='tip-panel' id='kopanel_"+id+"'>"
     +tipSec
@@ -1889,7 +1928,7 @@ function renderKOTipps(){
       +"<span>"+round.phase+"</span>"
       +"<span class='past-arrow"+(isOpen?" open":"")+"' id='koarrow_"+round.phaseKey+"'>&#9660;</span>"
       +"</div>";
-    h+="<div id='koround_"+round.phaseKey+"' style='"+(isOpen?"":"display:none")+"'>";
+    h+="<div id='koround_"+round.phaseKey+"' class='ko-round-body"+(isOpen?" open":"")+"'>";
     h+="<div style='display:flex;flex-direction:column;gap:10px;margin-bottom:8px'>";
     round.slots.forEach(slot=>{h+=buildKOCard(slot);});
     h+="</div></div>";
@@ -1918,16 +1957,10 @@ function toggleKORound(phaseKey){
   const body=document.getElementById("koround_"+phaseKey);
   const arrow=document.getElementById("koarrow_"+phaseKey);
   if(!body)return;
-  if(body.classList.contains("past-section")){
-    const nowOpen=body.classList.toggle("open");
-    window._koRoundOpen[phaseKey]=nowOpen;
-    if(arrow)arrow.classList.toggle("open",nowOpen);
-  }else{
-    const nowOpen=body.style.display==="none";
-    body.style.display=nowOpen?"":"none";
-    window._koRoundOpen[phaseKey]=nowOpen;
-    if(arrow)arrow.classList.toggle("open",nowOpen);
-  }
+  const nowOpen=!body.classList.contains("open");
+  body.classList.toggle("open",nowOpen);
+  window._koRoundOpen[phaseKey]=nowOpen;
+  if(arrow)arrow.classList.toggle("open",nowOpen);
 }
 
 async function doKODelete(slotId){
@@ -2139,6 +2172,7 @@ loadConfig();
 buildKOBracket();
 switchTab("vorrunde");
 renderAll();
+updateCountdown();
 refresh();
 initOneSignal();
 
