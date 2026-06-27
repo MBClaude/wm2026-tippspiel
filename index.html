@@ -649,8 +649,8 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
 <div class="tabs-wrap">
   <button class="tab-btn" onclick="switchTab('vorbereitung')" style="display:none">&#127881; DFB-Testspiele</button>
   <button class="tab-btn active" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
-  <button class="tab-btn" onclick="switchTab('bracket')">&#127942; Turnierbaum</button>
   <button class="tab-btn" onclick="switchTab('kotipps')">&#127919; KO-Tipps</button>
+  <button class="tab-btn" onclick="switchTab('bracket')">&#127942; Turnierbaum</button>
   <button class="tab-btn" onclick="switchTab('rangliste')">&#127945; Rangliste</button>
 </div>
 
@@ -1707,91 +1707,173 @@ function renderBracket(){
   sec.innerHTML=h;
 }
 
+// ── KO ROUND HELPERS ──
+function roundComplete(ids){return ids.every(id=>!!allResults[id]);}
+function currentKORound(){
+  for(const r of KO_ROUNDS){if(!roundComplete(r.slots.map(s=>s.id)))return r.phaseKey;}
+  return null;
+}
+
+function koFlagImg(germanName,size){
+  if(!window._deToEn){
+    window._deToEn={};
+    [...GAMES,...PREP_GAMES].forEach(g=>{
+      if(g.home&&g.ah)window._deToEn[g.home]=g.ah;
+      if(g.away&&g.aa)window._deToEn[g.away]=g.aa;
+    });
+  }
+  return flagImg(window._deToEn[germanName]||germanName,size);
+}
+
+function buildKOCard(slot){
+  const id=slot.id;
+  const kg=koGames[id]||{home:"TBD",away:"TBD"};
+  const isTBD=kg.home==="TBD"||kg.away==="TBD";
+  const result=allResults[id];
+  const tip=allTips[currentPlayer+"_"+id];
+  const locked=isLocked(slot.date,slot.time);
+  const isF=!!result;
+  const isL=liveData[id]&&liveData[id].status==="live";
+  const pts=calcPts(tip,result);
+  const lbl=SLOT_LABELS[id];
+  const dateStr=new Date(slot.date+"T12:00:00").toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"short"});
+
+  // Status badge
+  let statusBadge="";
+  if(isL)statusBadge="<span class='live-badge'>&#9679; LIVE</span>";
+  else if(isF)statusBadge="<span class='done-badge'>&#10003; Abgepfiffen</span>";
+  else if(locked)statusBadge="<span class='locked-badge'>&#128274; Gesperrt</span>";
+
+  // game-meta (left column)
+  const gameMeta="<div class='game-meta'>"
+    +"<span class='gtime'>"+slot.time+" Uhr</span>"
+    +"<span class='gtag'>"+slot.label+"</span>"
+    +"<span style='font-size:.65rem;color:var(--tdim)'>"+dateStr+"</span>"
+    +(statusBadge?"<span>"+statusBadge+"</span>":"")
+    +"</div>";
+
+  // Team columns
+  let teamH,teamA;
+  if(isTBD){
+    const ph=lbl?{h:lbl.h,a:lbl.a}:{h:"noch offen",a:"noch offen"};
+    teamH="<div class='team-h'><span class='tname' style='color:var(--tdim);font-size:.82rem;font-weight:400'>"+ph.h+"</span></div>";
+    teamA="<div class='team-a'><span class='tname' style='color:var(--tdim);font-size:.82rem;font-weight:400'>"+ph.a+"</span></div>";
+  }else{
+    teamH="<div class='team-h'><span class='tname'>"+kg.home+" "+koFlagImg(kg.home)+"</span></div>";
+    teamA="<div class='team-a'><span class='tname'>"+koFlagImg(kg.away)+" "+kg.away+"</span></div>";
+  }
+
+  // Center: score or VS
+  let center;
+  if(isF)center="<div class='score-big' style='color:var(--green-bright)'>"+result.home+":"+result.away+"</div>";
+  else if(isL&&liveData[id].home!==null)center="<div class='score-big' style='color:var(--red)'>"+liveData[id].home+":"+liveData[id].away+"</div>";
+  else center="<div class='vs-txt'>VS</div>";
+  const tCount=PLAYERS.filter(p=>allTips[p+"_"+id]).length;
+
+  // Right col: pts + my-tip badge
+  const tb=tip?"<span class='my-tip'>"+tip.home+":"+tip.away+"</span>":"<span class='my-tip none'>"+(locked||isTBD?"&#8211;":"Kein Tipp")+"</span>";
+  const pp=pts!==null?"<span class='pts "+ptsClass(pts)+"'>"+pts+"P</span>":"";
+  const statusCol="<div class='game-status-col'>"+pp+tb+"</div>";
+
+  // Tip section inside panel
+  let tipSec;
+  if(isTBD){
+    tipSec="<div class='locked-msg' style='font-style:italic'>Paarung noch offen &mdash; Tipp m&ouml;glich sobald beide Teams feststehen.</div>";
+  }else if(locked||isF||isL){
+    tipSec="<div class='locked-msg'>&#128274; Tipp gesperrt &mdash; das Spiel hat bereits begonnen oder ist beendet.</div>";
+  }else{
+    const hv=tip?tip.home:"";const av=tip?tip.away:"";
+    const cl=tip?"<button class='btn-danger' onclick='doKODelete("+id+")'>L&ouml;schen</button>":"";
+    tipSec="<div class='tip-row'>"
+      +"<span class='tip-instr'>Dein Tipp f&uuml;r <strong>"+kg.home+" vs "+kg.away+"</strong>:</span>"
+      +"<div class='sinput-wrap'>"
+      +"<input class='sin' id='bh_"+id+"' type='number' min='0' max='20' value='"+hv+"' placeholder='0'>"
+      +"<span>:</span>"
+      +"<input class='sin' id='ba_"+id+"' type='number' min='0' max='20' value='"+av+"' placeholder='0'>"
+      +"</div>"
+      +"<button class='btn-gold' onclick='doKOSave("+id+",\""+slot.date+"\",\""+slot.time+"\")'>Speichern</button>"+cl+"</div>";
+  }
+
+  // All-tips table
+  const rows=PLAYERS.map(p=>{
+    const t=allTips[p+"_"+id];const pp2=calcPts(t,result);const is=p===currentPlayer;
+    return"<tr><td>"+(is?"<strong style='color:var(--green-bright)'>"+p+"</strong>":p)+"</td>"
+    +"<td>"+(t?"<span class='tv'>"+t.home+":"+t.away+"</span>":"<span class='te'>&#8212;</span>")+"</td>"
+    +"<td>"+(pp2!==null?"<span class='pts "+ptsClass(pp2)+"'>"+pp2+"P</span>":"&#8212;")+"</td></tr>";
+  }).join("");
+
+  const isGermany=!isTBD&&(kg.home==="Germany"||kg.away==="Germany");
+  return "<div class='game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isGermany?" germany-game":"")+"'>"
+    +"<div class='game-header' onclick='togglePanel(\"kopanel_"+id+"\")'>"
+    +gameMeta+teamH
+    +"<div class='vs-block'>"+center+"<div class='tip-cnt'>"+tCount+" / "+PLAYERS.length+" Tipps</div></div>"
+    +teamA+statusCol
+    +"</div>"
+    +"<div class='tip-panel' id='kopanel_"+id+"'>"
+    +tipSec
+    +"<div class='all-tips-wrap'><table class='at'><thead><tr><th>Spieler</th><th>Tipp</th><th>Punkte</th></tr></thead><tbody>"+rows+"</tbody></table></div>"
+    +"</div></div>";
+}
+
 function renderKOTipps(){
   const sec=document.getElementById("koTippsSection");
   if(!currentPlayer){sec.innerHTML="<div class='no-player-msg'>W&auml;hle deinen <span>Namen</span>.</div>";return;}
   buildKOBracket();
+  window._koRoundOpen=window._koRoundOpen||{};
+  const activeKey=currentKORound();
+  const pastRounds=[];
   let h="";
+
   KO_ROUNDS.forEach(round=>{
-    h+="<div class='sec-title' style='margin-top:24px'>"+round.phase+"</div>";
+    const ids=round.slots.map(s=>s.id);
+    if(roundComplete(ids)){pastRounds.push(round);return;}
+    const isActive=round.phaseKey===activeKey;
+    // Active round: open by default unless user explicitly closed it
+    // Future rounds: closed by default unless user explicitly opened it
+    const isOpen=isActive?(window._koRoundOpen[round.phaseKey]!==false):(window._koRoundOpen[round.phaseKey]===true);
+    h+="<div class='sec-title' style='cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;margin-top:24px' onclick='toggleKORound(\""+round.phaseKey+"\")'>"
+      +"<span>"+round.phase+"</span>"
+      +"<span class='past-arrow"+(isOpen?" open":"")+"' id='koarrow_"+round.phaseKey+"'>&#9660;</span>"
+      +"</div>";
+    h+="<div id='koround_"+round.phaseKey+"' style='"+(isOpen?"":"display:none")+"'>";
     h+="<div style='display:flex;flex-direction:column;gap:10px;margin-bottom:8px'>";
-    round.slots.forEach(slot=>{
-      const id=slot.id;
-      const kg=koGames[id]||{home:"TBD",away:"TBD"};
-      const isTBD=kg.home==="TBD"||kg.away==="TBD";
-      const result=allResults[id];
-      const tip=allTips[currentPlayer+"_"+id];
-      const locked=isLocked(slot.date,slot.time);
-      const isF=!!result;
-      const isL=liveData[id]&&liveData[id].status==="live";
-      const pts=calcPts(tip,result);
-      const lbl=SLOT_LABELS[id];
-      const dateStr=new Date(slot.date+"T12:00:00").toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"short"});
+    round.slots.forEach(slot=>{h+=buildKOCard(slot);});
+    h+="</div></div>";
+  });
 
-      // Header-Zeile
-      let statusBadge="";
-      if(isL)statusBadge="<span class='live-badge'>&#9679; LIVE</span>";
-      else if(isF)statusBadge="<span class='done-badge'>&#10003; Abgepfiffen</span>";
-      else if(locked)statusBadge="<span class='locked-badge'>&#128274; Gesperrt</span>";
-
-      // Teams / Platzhalter
-      let teamLine="";
-      if(isTBD){
-        const ph=lbl?"<span style='color:var(--tdim);font-size:.8rem'>"+lbl.h+"</span><span style='color:var(--tdim);font-size:.75rem'> vs </span><span style='color:var(--tdim);font-size:.8rem'>"+lbl.a+"</span>"
-                    :"<span style='color:var(--tdim);font-size:.8rem'>noch offen</span>";
-        teamLine="<div style='display:flex;align-items:center;gap:6px;flex-wrap:wrap'>"+ph+"</div>";
-      }else{
-        const scoreDisp=isF?"<span style='color:var(--green-bright);font-weight:700'>"+result.home+":"+result.away+"</span>"
-                        :isL&&liveData[id].home!==null?"<span style='color:var(--red);font-weight:700'>"+liveData[id].home+":"+liveData[id].away+"</span>"
-                        :"<span style='color:var(--tdim)'>vs</span>";
-        teamLine="<div style='display:flex;align-items:center;gap:8px'>"+flagImg(kg.home,16)+" <strong>"+kg.home+"</strong> "+scoreDisp+" <strong>"+kg.away+"</strong> "+flagImg(kg.away,16)+"</div>";
-      }
-
-      // Tipp-Bereich
-      let tipSec="";
-      if(isTBD){
-        tipSec="<div style='color:var(--tdim);font-size:.78rem;font-style:italic'>Paarung noch offen &mdash; Tipp m&ouml;glich sobald beide Teams feststehen.</div>";
-      }else if(locked||isF||isL){
-        const ts=tip?"<span class='bk-tip-val'>"+tip.home+":"+tip.away+"</span>":"<span style='color:var(--tdim)'>—</span>";
-        const ptH=pts!==null?" <span class='pts "+ptsClass(pts)+"'>"+pts+"P</span>":"";
-        tipSec="<div style='font-size:.82rem'><span class='bk-tip-lbl'>Dein Tipp: </span>"+ts+ptH+"</div>";
-      }else{
-        const hv=tip?tip.home:"";const av=tip?tip.away:"";
-        const delBtn=tip?"<button class='btn-danger' style='font-size:.7rem;padding:2px 8px' onclick='doKODelete("+id+")'>L&ouml;schen</button>":"";
-        tipSec="<div class='tip-row' style='flex-wrap:wrap;gap:6px'>"
-          +"<span class='tip-instr'>Dein Tipp:</span>"
-          +"<div class='sinput-wrap'>"
-          +"<input class='sin' id='bh_"+id+"' type='number' min='0' max='20' value='"+hv+"' placeholder='0'>"
-          +"<span>:</span>"
-          +"<input class='sin' id='ba_"+id+"' type='number' min='0' max='20' value='"+av+"' placeholder='0'>"
-          +"</div>"
-          +"<button class='btn-gold' onclick='doKOSave("+id+",\""+slot.date+"\",\""+slot.time+"\")'>Speichern</button>"+delBtn+"</div>";
-      }
-
-      // Alle Tipps anderer Spieler
-      const rows=PLAYERS.map(p=>{
-        const t=allTips[p+"_"+id];const pp2=calcPts(t,result);const is=p===currentPlayer;
-        return"<tr><td>"+(is?"<strong style='color:var(--green-bright)'>"+p+"</strong>":p)+"</td>"
-        +"<td>"+(t?"<span class='tv'>"+t.home+":"+t.away+"</span>":"<span class='te'>&#8212;</span>")+"</td>"
-        +"<td>"+(pp2!==null?"<span class='pts "+ptsClass(pp2)+"'>"+pp2+"P</span>":"&#8212;")+"</td></tr>";
-      }).join("");
-
-      const isGermany=!isTBD&&(kg.home==="Germany"||kg.away==="Germany");
-      h+="<div class='game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isGermany?" germany-game":"")+"'>"
-        +"<div class='game-header' onclick='togglePanel(\"kopanel_"+id+"\")'>"
-        +"<div class='game-meta'><span class='gtime'>"+slot.time+" Uhr</span><span class='gtag'>"+slot.label+"</span>"+statusBadge+"</div>"
-        +"<div style='padding:4px 12px 6px'>"+teamLine+"</div>"
-        +"<div style='padding:0 12px 4px;font-size:.75rem;color:var(--tdim)'>"+dateStr+"</div>"
-        +"</div>"
-        +"<div class='tip-panel' id='kopanel_"+id+"'>"
-        +tipSec
-        +"<div class='all-tips-wrap'><table class='at'><thead><tr><th>Spieler</th><th>Tipp</th><th>Punkte</th></tr></thead><tbody>"+rows+"</tbody></table></div>"
-        +"</div>"
-        +"</div>";
+  if(pastRounds.length>0){
+    const pastOpen=window._koRoundOpen["__past__"]===true;
+    h+="<button class='past-toggle' onclick='toggleKORound(\"__past__\")'>"
+      +"&#128337; Vergangene KO-Spiele"
+      +"<span class='past-arrow"+(pastOpen?" open":"")+"' id='koarrow___past__'>&#9660;</span>"
+      +"</button>";
+    h+="<div id='koround___past__' class='past-section"+(pastOpen?" open":"")+"'>";
+    pastRounds.forEach(round=>{
+      h+="<div class='sec-title' style='margin-top:16px'>"+round.phase+"</div>";
+      h+="<div style='display:flex;flex-direction:column;gap:10px;margin-bottom:8px'>";
+      round.slots.forEach(slot=>{h+=buildKOCard(slot);});
+      h+="</div>";
     });
     h+="</div>";
-  });
+  }
   sec.innerHTML=h;
+}
+
+function toggleKORound(phaseKey){
+  window._koRoundOpen=window._koRoundOpen||{};
+  const body=document.getElementById("koround_"+phaseKey);
+  const arrow=document.getElementById("koarrow_"+phaseKey);
+  if(!body)return;
+  if(body.classList.contains("past-section")){
+    const nowOpen=body.classList.toggle("open");
+    window._koRoundOpen[phaseKey]=nowOpen;
+    if(arrow)arrow.classList.toggle("open",nowOpen);
+  }else{
+    const nowOpen=body.style.display==="none";
+    body.style.display=nowOpen?"":"none";
+    window._koRoundOpen[phaseKey]=nowOpen;
+    if(arrow)arrow.classList.toggle("open",nowOpen);
+  }
 }
 
 async function doKODelete(slotId){
@@ -1804,43 +1886,22 @@ async function doKODelete(slotId){
 function renderRangliste(){
   const prepIds=PREP_GAMES.map(g=>g.id);
   const grpIds=GAMES.map(g=>g.id);
-  const r32Ids=KO_ROUNDS[0].slots.map(s=>s.id);
-  const afIds=KO_ROUNDS[1].slots.map(s=>s.id);
-  const qfIds=KO_ROUNDS[2].slots.map(s=>s.id);
-  const sfIds=KO_ROUNDS[3].slots.map(s=>s.id);
-  const finIds=KO_ROUNDS[4].slots.map(s=>s.id);
+  const koIds=KO_ROUNDS.flatMap(r=>r.slots.map(s=>s.id));
   const rows=PLAYERS.map(p=>{
     const prep=playerPts(p,prepIds);
     const grp=playerPts(p,grpIds);
-    const r32=playerPts(p,r32Ids);
-    const af=playerPts(p,afIds);
-    const qf=playerPts(p,qfIds);
-    const sf=playerPts(p,sfIds);
-    const fin=playerPts(p,finIds);
-    const tot=grp+r32+af+qf+sf+fin;
+    const ko=playerPts(p,koIds);
+    const tot=grp+ko;
     const tips=Object.keys(allTips).filter(k=>k.startsWith(p+"_")).length;
-    return{p,prep,grp,r32,af,qf,sf,fin,tot,tips};
+    return{p,prep,grp,ko,tot,tips};
   }).sort((a,b)=>b.tot-a.tot||b.tips-a.tips);
 
-  const koCols=[
-    {key:"r32",label:"R32",   ids:KO_ROUNDS[0].slots.map(s=>s.id)},
-    {key:"af", label:"AF",    ids:KO_ROUNDS[1].slots.map(s=>s.id)},
-    {key:"qf", label:"VF",    ids:KO_ROUNDS[2].slots.map(s=>s.id)},
-    {key:"sf", label:"HF",    ids:KO_ROUNDS[3].slots.map(s=>s.id)},
-    {key:"fin",label:"Finale",ids:KO_ROUNDS[4].slots.map(s=>s.id)},
-  ].filter(c=>c.ids.some(id=>allResults[id]));
-  const showGrp=koCols.length>0;
   document.getElementById("sbHeadTotal").innerHTML=
-    "<th>Spieler</th>"
-    +(showGrp?"<th>Vorrunde</th>":"")
-    +koCols.map(c=>"<th>"+c.label+"</th>").join("")
-    +"<th style='color:var(--gold-l)'>GESAMT</th>";
+    "<th>Spieler</th><th>Vorrunde</th><th>KO</th><th style='color:var(--gold-l)'>GESAMT</th>";
   document.getElementById("sbBodyTotal").innerHTML=competitionRank(rows,'tot').map(r=>{
     const bold=r.p===currentPlayer?"color:var(--green-bright)":"";
     const nameEl="<span class='prof-name-link' style='"+bold+"' onclick='showProfileModal(\""+r.p+"\")'>"+rankBadge(r.rank,r.tot)+r.p+"</span>";
-    return"<tr><td>"+nameEl+"</td>"
-    +(showGrp?"<td>"+r.grp+"</td>":"")
-    +koCols.map(c=>"<td>"+r[c.key]+"</td>").join("")
+    return"<tr><td>"+nameEl+"</td><td>"+r.grp+"</td><td>"+r.ko+"</td>"
     +"<td style='color:var(--gold-l);font-weight:700;font-size:1rem'>"+r.tot+"</td></tr>";
   }).join("");
 
@@ -1876,10 +1937,13 @@ function renderRangliste(){
   const allDone=GAMES.every(g=>allResults[g.id]);
   const gws=document.getElementById("groupWinnerSection");
   if(allDone&&win&&win.pts>0){
+    const coWinners=grpWinnerRows.filter(r=>r.pts===win.pts);
+    const namesHtml=coWinners.map(r=>"<div style='font-family:\"Bebas Neue\",cursive;font-size:2.2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--gold),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text'>"+r.p+"</div>").join("<div style='color:var(--tdim);font-size:1rem;margin:2px 0'>&#183;</div>");
+    const lbl=coWinners.length>1?"VORRUNDENSIEGER":"VORRUNDENSIEGER";
     gws.innerHTML="<div class='winner-box'>"
     +"<div style='font-size:2.5rem;margin-bottom:10px'>&#128081;</div>"
-    +"<div style='font-family:\"Bebas Neue\",cursive;font-size:2.2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--gold),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text'>"+win.p+"</div>"
-    +"<div style='font-family:\"Barlow Condensed\",sans-serif;font-size:.9rem;color:var(--tdim);letter-spacing:2px;margin-top:6px'>VORRUNDENSIEGER &middot; "+win.pts+" PUNKTE</div>"
+    +namesHtml
+    +"<div style='font-family:\"Barlow Condensed\",sans-serif;font-size:.9rem;color:var(--tdim);letter-spacing:2px;margin-top:6px'>"+lbl+" &middot; "+win.pts+" PUNKTE</div>"
     +"</div>";
   }else{
     gws.innerHTML="<p style='color:var(--tdim);font-family:\"Barlow Condensed\",sans-serif;font-size:.9rem;letter-spacing:1px'>Wird nach Abschluss der Vorrunde bekanntgegeben.</p>";
