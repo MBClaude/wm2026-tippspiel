@@ -1856,7 +1856,7 @@ function buildKOCard(slot){
     +"<td>"+(pp2!==null?"<span class='pts "+ptsClass(pp2)+"'>"+pp2+"P</span>":"&#8212;")+"</td></tr>";
   }).join("");
 
-  const isGermany=!isTBD&&(kg.home==="Germany"||kg.away==="Germany");
+  const isGermany=(homeKnown&&kg.home==="Deutschland")||(awayKnown&&kg.away==="Deutschland");
   return "<div class='game-card"+(isF?" finished":"")+(isL?" live-now":"")+(isGermany?" germany-game":"")+"'>"
     +"<div class='game-header' onclick='togglePanel(\"kopanel_"+id+"\")'>"
     +gameMeta+teamH
