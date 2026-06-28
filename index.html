@@ -1261,7 +1261,11 @@ async function fetchEspnKOPairings(){
     if(allResults[s.id])return;
     const slotMs=new Date(s.date+"T"+s.time+":00+02:00").getTime();
     const daysDiff=(slotMs-now)/864e5;
-    if(daysDiff>-1&&daysDiff<14)koDates.add(s.date);
+    if(daysDiff>-1&&daysDiff<14){
+      koDates.add(s.date);
+      // Early MESZ morning = previous evening US-local → ESPN lists under prev day
+      if(s.time<"07:00")koDates.add(new Date(slotMs-864e5).toISOString().slice(0,10));
+    }
   }));
   if(!koDates.size)return;
 
@@ -1275,8 +1279,10 @@ async function fetchEspnKOPairings(){
   // Match each unresolved slot to an ESPN event by UTC timestamp (±60 min)
   KO_ROUNDS.forEach(r=>r.slots.forEach(slot=>{
     if(espnKOPairings[slot.id]||allResults[slot.id])return;
-    const evs=dateEvents[slot.date];if(!evs||!evs.length)return;
     const slotMs=new Date(slot.date+"T"+slot.time+":00+02:00").getTime();
+    const prevDate=new Date(slotMs-864e5).toISOString().slice(0,10);
+    const evs=[...(dateEvents[slot.date]||[]),...(dateEvents[prevDate]||[])];
+    if(!evs.length)return;
     for(const ev of evs){
       const comp=ev.competitions?.[0];if(!comp)continue;
       const evMs=new Date(ev.date||"").getTime();if(isNaN(evMs))continue;
@@ -1591,7 +1597,7 @@ async function refresh(){
     document.getElementById("lastUpdate").textContent="Zuletzt: "+new Date().toLocaleTimeString("de-DE");
   }catch(e){
     setDot("dbDot","red");setTxt("dbStatus","DB-Fehler: "+e.message);
-    document.getElementById("setupBanner").style.display="block";
+    console.error("DB-Fehler:",e.message);
   }
   await fetchLiveResults();
   renderAll();
@@ -2310,12 +2316,6 @@ switchTab("vorrunde");
 renderAll();
 updateCountdown();
 refresh();
-initOneSignal();
-
-// Request notification permission early
-if("Notification" in window&&Notification.permission==="default"){
-  Notification.requestPermission();
-}
 
 // ── PROFIL-MODAL ──
 function showProfileModal(p){
