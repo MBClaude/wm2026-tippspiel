@@ -154,6 +154,10 @@ select#playerSelect option{background:#145220;color:var(--text);}
 .push-box span{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--tmid);flex:1;}
 .push-box strong{color:var(--bright);}
 
+/* ── REMINDER BANNER ── */
+.reminder-banner{max-width:1600px;margin:10px auto 0;padding:0 28px;}
+.reminder-box{background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(200,150,30,0.08));backdrop-filter:blur(12px);border:1px solid rgba(212,175,55,0.45);border-radius:var(--rs);padding:11px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.reminder-box span{font-family:'Barlow Condensed',sans-serif;font-size:.88rem;letter-spacing:1px;color:var(--gold-l);flex:1;}
 /* ── TABS ── */
 .tabs-wrap{
   max-width:1600px;margin:22px auto 0;padding:0 28px;
@@ -689,13 +693,21 @@ select#pmSelect option{background:#1a4a28;color:#ffffff;}
     <button class="btn-glass" onclick="document.getElementById('pushBanner').style.display='none'" style="padding:6px 14px;font-size:.78rem">Sp&auml;ter</button>
   </div>
 </div>
+<div class="reminder-banner" id="reminderBanner" style="display:none">
+  <div class="reminder-box">
+    <span id="reminderText"></span>
+    <button class="btn-gold" id="reminderBtn" style="padding:6px 16px;font-size:.82rem">Jetzt tippen</button>
+    <button class="btn-glass" onclick="document.getElementById('reminderBanner').style.display='none'" style="padding:6px 14px;font-size:.78rem">&#10005;</button>
+  </div>
+</div>
 
 <div class="tabs-wrap">
   <button class="tab-btn" onclick="switchTab('vorbereitung')" style="display:none">&#127881; DFB-Testspiele</button>
-  <button class="tab-btn active" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
+  <button class="tab-btn active" id="tabBtnVorrunde" onclick="switchTab('vorrunde')">&#9917; Vorrunde</button>
   <button class="tab-btn" onclick="switchTab('kotipps')">&#127919; KO-Tipps</button>
   <button class="tab-btn" onclick="switchTab('bracket')">&#127942; Turnierbaum</button>
   <button class="tab-btn" onclick="switchTab('rangliste')">&#127945; Rangliste</button>
+  <button class="tab-btn" id="tabBtnVorrundArchiv" onclick="switchTab('vorrunde')" style="display:none;font-size:.75rem;opacity:.6;letter-spacing:.5px">Vorrunde &#128196;</button>
 </div>
 
 <main>
@@ -1135,44 +1147,59 @@ function sendNotif(title,body){
 }
 
 
-// 18:00 Uhr Tages-Erinnerung — alle Spiele der nächsten 24h ohne Tipp
+// 18:00 Uhr Tages-Erinnerung — Spiele heute 18:00 bis morgen 09:00 MESZ ohne Tipp
 let last18Reminder="";
 function check18Reminder(){
   if(!currentPlayer)return;
-  const now=new Date();
-  const h=now.getHours(),mn=now.getMinutes();
-  const today=now.toISOString().slice(0,10);
-  // Nur einmal pro Tag zwischen 18:00 und 18:05 auslösen
-  if(h!==18||mn>5)return;
-  if(last18Reminder===today)return;
-  last18Reminder=today;
+  const nowMs=Date.now();
+  const nowMESZ=new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Berlin"}));
+  const h=nowMESZ.getHours();
+  if(h<18)return; // nur ab 18 Uhr MESZ relevant
+  const today=nowMESZ.toISOString().slice(0,10);
+  // Einmal-pro-Tag-Toast/Notif — Banner darf trotzdem aktuell bleiben
+  const firstTime=last18Reminder!==today;
+  if(firstTime)last18Reminder=today;
 
-  const in24h=now.getTime()+24*3600*1000;
-  function koTime(dateStr,timeStr){return new Date(dateStr+"T"+timeStr+":00+02:00").getTime();}
-  const allG=[...PREP_GAMES,...GAMES];
-  const missing=allG.filter(g=>{
+  // Zeitfenster: jetzt bis morgen 09:00 MESZ
+  const tomorrowStr=new Date(nowMs+864e5).toLocaleString("en-US",{timeZone:"Europe/Berlin"}).split(",")[0];
+  const winEnd=new Date(tomorrowStr.trim()+", 09:00:00 AM").getTime()+2*3600000; // rough 09:00 MESZ
+  const winStart=nowMs;
+
+  function slotMs(dateStr,timeStr){return new Date(dateStr+"T"+timeStr+":00+02:00").getTime();}
+
+  const groupMissing=GAMES.filter(g=>{
+    if(allResults[g.id])return false;
     if(allTips[currentPlayer+"_"+g.id])return false;
-    const t=koTime(g.date,g.time);
-    return t>now.getTime()&&t<in24h;
+    if(isLocked(g.date,g.time))return false;
+    const t=slotMs(g.date,g.time);
+    return t>=winStart&&t<=winEnd;
   });
   const koMissing=KO_ROUNDS.flatMap(r=>r.slots).filter(s=>{
+    if(allResults[s.id])return false;
     if(allTips[currentPlayer+"_"+s.id])return false;
-    const kg=koGames[s.id];if(!kg||kg.home==="TBD")return false;
-    const t=koTime(s.date,s.time);
-    return t>now.getTime()&&t<in24h;
+    if(isLocked(s.date,s.time))return false;
+    const kg=koGames[s.id];
+    if(!kg||kg.home==="TBD"||kg.away==="TBD")return false;
+    const t=slotMs(s.date,s.time);
+    return t>=winStart&&t<=winEnd;
   });
-  const total=missing.length+koMissing.length;
-  if(total===0)return;
-  const names=[
-    ...missing.map(g=>g.home+" vs "+g.away),
-    ...koMissing.map(s=>koGames[s.id].home+" vs "+koGames[s.id].away)
-  ].join(", ");
-  sendNotif("⏰ WM Tippspiel Erinnerung — "+currentPlayer,
-    total+" Spiel"+(total>1?"e":"")+" noch ohne Tipp: "+names);
+  const total=groupMissing.length+koMissing.length;
+  const banner=document.getElementById("reminderBanner");
+  const txt=document.getElementById("reminderText");
+  const btn=document.getElementById("reminderBtn");
+  if(!banner||!txt||!btn)return;
+  if(total===0){banner.style.display="none";return;}
+  txt.textContent="⚠️ Dir fehlen noch "+total+" Tipp"+(total>1?"s":"")+" für heute Abend/Nacht.";
+  const hasKO=koMissing.length>0;
+  btn.onclick=()=>switchTab(hasKO?"kotipps":"vorrunde");
+  banner.style.display="block";
+  // Einmalige Notification wenn Permission bereits erteilt
+  if(firstTime&&"Notification" in window&&Notification.permission==="granted"){
+    sendNotif("⏰ WM Tippspiel — "+currentPlayer,
+      total+" Spiel"+(total>1?"e":"")+" noch ohne Tipp heute Abend/Nacht.");
+  }
 }
 setInterval(check18Reminder,60000);
-// Sofort beim Laden prüfen (falls App genau um 18 Uhr geöffnet wird)
-setTimeout(check18Reminder,3000);
 
 // ── SUPABASE ──
 async function sbFetch(path,opts={}){
@@ -1603,6 +1630,19 @@ async function refresh(){
   renderAll();
   updateCountdown();
   checkTournamentEvents();
+  check18Reminder();
+  // Tab-Init: einmalig nach erstem Datenladen
+  if(!window._tabInitialized){
+    window._tabInitialized=true;
+    const done=allGroupGamesDone();
+    const vBtn=document.getElementById("tabBtnVorrunde");
+    const aBtn=document.getElementById("tabBtnVorrundArchiv");
+    if(done){
+      if(vBtn)vBtn.style.display="none";
+      if(aBtn)aBtn.style.display="";
+      switchTab("kotipps");
+    }
+  }
 }
 setInterval(refresh,2*60*1000);
 setInterval(updateCountdown,30*1000);
