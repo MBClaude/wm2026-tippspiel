@@ -2056,11 +2056,12 @@ function buildKOCard(slot){
     tipSec="<div class='tip-row'>"
       +"<span class='tip-instr'>Dein Tipp f&uuml;r <strong>"+kg.home+" vs "+kg.away+"</strong>:</span>"
       +"<div class='sinput-wrap'>"
-      +"<input class='sin' id='bh_"+id+"' type='number' min='0' max='20' value='"+hv+"' placeholder='0'>"
+      +"<input class='sin' id='bh_"+id+"' type='number' min='0' max='20' value='"+hv+"' placeholder='0' oninput='koInputChange("+id+")'>"
       +"<span>:</span>"
-      +"<input class='sin' id='ba_"+id+"' type='number' min='0' max='20' value='"+av+"' placeholder='0'>"
+      +"<input class='sin' id='ba_"+id+"' type='number' min='0' max='20' value='"+av+"' placeholder='0' oninput='koInputChange("+id+")'>"
       +"</div>"
-      +"<button class='btn-gold' onclick='doKOSave("+id+",\""+slot.date+"\",\""+slot.time+"\")'>Speichern</button>"+cl+"</div>";
+      +"<div id='kohint_"+id+"' style='display:none;color:#e74c3c;font-size:.8rem;font-family:\"Barlow Condensed\",sans-serif;letter-spacing:1px;margin:2px 0 4px'>In KO-Spielen muss ein Sieger getippt werden.</div>"
+      +"<button class='btn-gold' id='kobtn_"+id+"' onclick='doKOSave("+id+",\""+slot.date+"\",\""+slot.time+"\")'>Speichern</button>"+cl+"</div>";
   }
 
   // All-tips table
@@ -2256,11 +2257,22 @@ async function doDelete(gid){
     showToast("Tipp gel&ouml;scht","rgba(120,120,120,0.9)");
   }catch(e){showToast("Fehler: "+e.message,"rgba(231,76,60,0.9)");}
 }
+function koInputChange(id){
+  const bh=document.getElementById("bh_"+id);
+  const ba=document.getElementById("ba_"+id);
+  const btn=document.getElementById("kobtn_"+id);
+  const hint=document.getElementById("kohint_"+id);
+  if(!bh||!ba||!btn||!hint)return;
+  const draw=bh.value!==''&&ba.value!==''&&parseInt(bh.value)===parseInt(ba.value);
+  btn.disabled=draw;
+  hint.style.display=draw?'':'none';
+}
 async function doKOSave(slotId,date,time){
   if(isLocked(date,time)){showToast("&#128274; Gesperrt!","rgba(230,126,34,0.9)");return;}
   const hv=document.getElementById("bh_"+slotId)?.value;
   const av=document.getElementById("ba_"+slotId)?.value;
   if(!hv||!av){showToast("Beide Felder ausf&uuml;llen","rgba(231,76,60,0.9)");return;}
+  if(parseInt(hv)===parseInt(av)){showToast("In KO-Spielen muss ein Sieger getippt werden.","rgba(231,76,60,0.9)");return;}
   try{
     await upsertTip(currentPlayer,slotId,parseInt(hv),parseInt(av));
     renderAll();showToast("&#10003; KO-Tipp gespeichert!","rgba(46,204,113,0.9)");
