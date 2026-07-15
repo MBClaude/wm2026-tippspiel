@@ -1282,13 +1282,14 @@ async function fetchEspnEvents(dateStr){
 
 async function fetchEspnKOPairings(){
   const now=Date.now();
-  // Collect unique upcoming KO dates without results, within next 14 days
+  // Collect dates for KO slots without confirmed pairing — including recently finished games
+  // (up to 30 days back, so team names are available even on fresh page loads)
   const koDates=new Set();
   KO_ROUNDS.forEach(r=>r.slots.forEach(s=>{
-    if(allResults[s.id])return;
+    if(espnKOPairings[s.id])return; // already confirmed this session
     const slotMs=new Date(s.date+"T"+s.time+":00+02:00").getTime();
     const daysDiff=(slotMs-now)/864e5;
-    if(daysDiff>-1&&daysDiff<14){
+    if(daysDiff>-30&&daysDiff<14){
       koDates.add(s.date);
       // Early MESZ morning = previous evening US-local → ESPN lists under prev day
       if(s.time<"07:00")koDates.add(new Date(slotMs-864e5).toISOString().slice(0,10));
@@ -1303,9 +1304,9 @@ async function fetchEspnKOPairings(){
     catch(e){console.warn("ESPN KO fetch failed for",date,":",e.message);}
   }));
 
-  // Match each unresolved slot to an ESPN event by UTC timestamp (±60 min)
+  // Match each slot without confirmed pairing to an ESPN event by UTC timestamp (±60 min)
   KO_ROUNDS.forEach(r=>r.slots.forEach(slot=>{
-    if(espnKOPairings[slot.id]||allResults[slot.id])return;
+    if(espnKOPairings[slot.id])return; // skip already confirmed
     const slotMs=new Date(slot.date+"T"+slot.time+":00+02:00").getTime();
     const prevDate=new Date(slotMs-864e5).toISOString().slice(0,10);
     const evs=[...(dateEvents[slot.date]||[]),...(dateEvents[prevDate]||[])];
@@ -1327,6 +1328,7 @@ async function fetchEspnKOPairings(){
         continue;
       }
       espnKOPairings[slot.id]={home:deH,away:deA};
+      localStorage.setItem("wm26_kop_"+slot.id,JSON.stringify({home:deH,away:deA}));
       break;
     }
   }));
@@ -1396,6 +1398,16 @@ function getGroupTable(group){
   return Object.values(teams).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
 }
 function buildKOBracket(){
+  // Restore persisted ESPN pairings from localStorage (survive page refresh)
+  if(!window._koePairRestored){
+    window._koePairRestored=true;
+    KO_ROUNDS.forEach(r=>r.slots.forEach(s=>{
+      if(!espnKOPairings[s.id]){
+        const v=localStorage.getItem("wm26_kop_"+s.id);
+        if(v)try{espnKOPairings[s.id]=JSON.parse(v);}catch(e){}
+      }
+    }));
+  }
   const groups=["A","B","C","D","E","F","G","H","I","J","K","L"];
   const gW={},gS={},thirdsByGroup={};
   groups.forEach(g=>{
